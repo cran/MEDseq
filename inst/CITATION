@@ -1,0 +1,44 @@
+citHeader("To cite the 'MEDseq' package in publications, please use:")
+
+citEntry(entry  = "Article",
+  author  = personList(person(given="Keefe", family="Murphy"),
+                       person(given=c("Thomas", "Brendan"), family="Murphy"),
+                       person(given="Raffaella", family="Piccarreta"),
+                       person(given=c("Isobel", "Claire"), family="Gormley")),
+  title   = "Clustering Longitudinal Life-Course Sequences using Mixtures of Exponential-Distance Models",
+  year    = "2019",
+  journal = "To appear",
+  volume  = "",
+  number  = "",
+  pages   = "",
+  url     = "https://arxiv.org/abs/1908.07963",
+  archivePrefix = "arXiv",
+  eprint  = "1908.07963",
+  primaryClass  = "stat.ME",
+
+  textVersion   =
+    paste0("Keefe Murphy, T. Brendan Murphy, Raffaella Piccarreta, and I. Claire Gormley (2019). ",
+           "Clustering Longitudinal Life-Course Sequences using Mixtures of Exponential-Distance Models. ",
+           "To appear. ",
+           "Pre-print available at arXiv. ",
+           "URL: https://arxiv.org/abs/1908.07963.")
+)
+
+year     <- sub(".*(2[[:digit:]]{3})-.*", "\\1", meta$Date)
+vers     <- paste("package version", meta$Version)
+
+citEntry(entry  = "Manual",
+  author  = personList(person(given="Keefe", family="Murphy"),
+                       person(given=c("Thomas", "Brendan"), family="Murphy"),
+                       person(given="Raffaella", family="Piccarreta"),
+                       person(given=c("Isobel", "Claire"), family="Gormley")),
+  title   = "\\texttt{\\textup{MEDseq}}: {M}ixtures of Exponential-Distance Models with Covariates",
+  year    = year,
+  note    = paste0("\\textsf{R} ", vers),
+  url     = "https://cran.r-project.org/package=MEDseq",
+
+  textVersion   =
+    paste0("Keefe Murphy, T. Brendan Murphy, Raffaella Piccarreta, and I. Claire Gormley (", year, "). ",
+           "MEDseq: Mixtures of Exponential-Distance Models with Covariates. ",
+           "URL: https://cran.r-project.org/package=MEDseq ", "R ", vers)
+)
