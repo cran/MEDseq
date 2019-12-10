@@ -1,8 +1,8 @@
 Package: MEDseq
 Type: Package
-Date: 2019-08-23
+Date: 2019-12-10
 Title: Mixtures of Exponential-Distance Models with Covariates
-Version: 1.0.0
+Version: 1.0.1
 Authors@R: c(person("Keefe", "Murphy", email = "keefe.murphy@ucd.ie", role = c("aut", "cre")),
            person("Thomas Brendan", "Murphy", email = "brendan.murphy@ucd.ie", role = "ctb"),
            person("Raffaella", "Piccarreta", email = "raffaella.piccarreta@unibocconi.it ", role = "ctb"),
@@ -17,14 +17,14 @@ LazyData: true
 Imports: cluster, matrixStats, nnet, seriation, stringdist, TraMineR,
         WeightedCluster
 Suggests: knitr
-RoxygenNote: 6.1.1
+RoxygenNote: 7.0.2
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2019-08-23 12:49:30 UTC; Keefe
+Packaged: 2019-12-10 21:10:50 UTC; Keefe
 Author: Keefe Murphy [aut, cre],
   Thomas Brendan Murphy [ctb],
   Raffaella Piccarreta [ctb],
   Isobel Claire Gormley [ctb]
 Maintainer: Keefe Murphy <keefe.murphy@ucd.ie>
 Repository: CRAN
-Date/Publication: 2019-08-24 13:10:02 UTC
+Date/Publication: 2019-12-10 21:40:02 UTC
