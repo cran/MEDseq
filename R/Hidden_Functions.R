@@ -20,7 +20,14 @@
 }
 
 #' @importFrom matrixStats "rowMaxs"
+#.choice_crit     <- function(ll, seqs, z, gate.pen, modtype = c("CC", "UC", "CU", "UU", "CCN", "UCN", "CUN", "UUN"), nonzero = NULL, gamma = 0) {
 .choice_crit      <- function(ll, seqs, z, gate.pen, modtype = c("CC", "UC", "CU", "UU", "CCN", "UCN", "CUN", "UUN"), nonzero = NULL) {
+ #if(length(gamma) > 1   ||
+ #   !is.numeric(gamma)  ||
+ #   (gamma < 0   ||
+ #    gamma > 1))                stop("gamma must be a single digit in the interval [0, 1]", call.=FALSE)
+ #if(gamma  < (1   - 1/(2 * log(attr(seqs, "T"))/
+ #   log(attr(seqs, "W")))))     warning("Invalid gamma", call.=FALSE, immediate.=TRUE)
   G               <- attr(seqs, ifelse(noise <- is.element(modtype, c("CCN", "UCN", "CUN", "UUN")), "G0", "G"))
   P               <- attr(seqs, "T")
   kpar            <- ifelse(is.na(nonzero),
@@ -44,6 +51,7 @@
                                    UUN = nonzero + G  * P)) + gate.pen
   ll2             <- ll  * 2
   bic             <- ll2 - kpar * log(attr(seqs, "W"))
+ #ebic            <- bic - 2 * kpar * gamma * log(attr(seqs, "T"))
     return(list(bic = bic, icl = bic + 2L * sum(log(rowMaxs(z)), na.rm=TRUE), aic = ll2 - kpar * 2, df = kpar))
 }
 
@@ -54,11 +62,6 @@
 #' @importFrom stringdist "stringdistmatrix"
 .dbar             <- function(seqs, theta) {
     mean(stringdistmatrix(seqs, theta, method="hamming"))
-}
-
-#' @importFrom stringdist "stringdistmatrix"
-.dseq             <- function(seqs, theta) {
-    stringdistmatrix(seqs, theta, method="hamming")
 }
 
 .drop_constants   <- function(dat, formula, sub = NULL) {
@@ -83,6 +86,11 @@
   form            <- if(intercept  == 0) stats::update.formula(form, ~ . -1)        else form
   environment(form)        <- environment(formula)
     form
+}
+
+#' @importFrom stringdist "stringdistmatrix"
+.dseq             <- function(seqs, theta) {
+    stringdistmatrix(seqs, theta, method="hamming")
 }
 
 #' @importFrom matrixStats "colSums2" "logSumExp" "rowLogSumExps" "rowSums2"
@@ -305,7 +313,7 @@
                                          CU=,  CUN=rowSums2(dGp),
                                          UU=,  UUN=sweep(dGp, 2L, prop, FUN="/", check.margin=FALSE))
   }
-  lambda          <- ifelse(denom < numer * V1V, lV1 + log(numer - denom) - log(denom), 0L)
+  lambda          <- suppressWarnings(ifelse(denom < (numer * V1V), lV1 + log(numer - denom) - log(denom), 0L))
   lambda          <- matrix(lambda, nrow=switch(EXPR=l.meth, UC=, UU=, UCN=, UUN=G0, 1L), ncol=switch(EXPR=l.meth, CU=, UU=, CUN=, UUN=P, 1L), byrow=is.element(l.meth, c("UU", "UUN")))
   switch(EXPR=l.meth, UC=,  UU=,
                      UCN=, UUN=           {
@@ -361,16 +369,6 @@
 
 .mat_byrow        <- function(x, nrow, ncol) {
     matrix(x, nrow=nrow, ncol=ncol, byrow=any(dim(as.matrix(x)) == 1))
-}
-
-.seq_grid         <- function(length, ncat) {
-  if(!is.numeric(length) ||
-     length(length)      != 1 ||
-     length       <= 0)          stop("'length' must a strictly positive scalar", call.=FALSE)
-  if(!is.numeric(ncat)   ||
-     length(ncat)        != 1 ||
-     ncat         <= 0)          stop("'ncat' must a strictly positive scalar",   call.=FALSE)
-    do.call(expand.grid, replicate(length, list(seq_len(ncat) - 1L)))
 }
 
 .modal            <- function(x) {
@@ -506,12 +504,27 @@
     return(list(crits = stats::setNames(x.val[seq_len(pick)], vapply(seq_len(pick), function(p, b=x.ind[p,]) paste0(b[2L], ",", b[1L]), character(1L))), pick = pick))
 }
 
+.rDirichlet <- function(G, shape = 1L) {
+  tmp       <- if(all(shape == 1)) stats::rexp(G, 1L) else stats::rgamma(G, shape=shape, rate=1L) 
+    tmp/sum(tmp)
+}
+
 #' @importFrom matrixStats "rowSums2"
 .renorm_z         <- function(z) z/rowSums2(z)
 
 .replace_levels   <- function(seq, levels = NULL) {
   seq             <- as.numeric(strsplit(seq, "")[[1L]])
     if(is.null(levels)) factor(seq) else factor(seq, levels=seq_along(levels) - any(seq == 0), labels=as.character(levels))
+}
+
+.seq_grid         <- function(length, ncat) {
+  if(!is.numeric(length) ||
+     length(length)      != 1 ||
+     length       <= 0)          stop("'length' must a strictly positive scalar", call.=FALSE)
+  if(!is.numeric(ncat)   ||
+     length(ncat)        != 1 ||
+     ncat         <= 0)          stop("'ncat' must a strictly positive scalar",   call.=FALSE)
+    do.call(expand.grid, replicate(length, list(seq_len(ncat) - 1L)))
 }
 
 .tau_noise        <- function(tau, z0) {
