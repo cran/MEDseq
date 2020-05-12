@@ -53,15 +53,15 @@ mod3 <- MEDseq_fit(mvad.seq, G=11, modtype="CC", weights=mvad$weights,
 ## ---- eval=FALSE--------------------------------------------------------------
 #  (comp <- MEDseq_compare(mod1, mod2, mod3, criterion="dbs"))
 #  opt   <- comp$optimal
-#  summary(opt)
+#  summary(opt, classification = TRUE, parameters = FALSE, network = FALSE)
 
 ## ---- echo=FALSE--------------------------------------------------------------
 (comp <- MEDseq_compare(mod1, mod2, mod3, criterion="dbs"))
 opt   <- comp$optimal
 suppressMessages(summary(opt))
 
-## -----------------------------------------------------------------------------
-coef(opt$gating)
+## ---- eval=FALSE--------------------------------------------------------------
+#  print(opt$gating)
 
 ## ---- eval=FALSE--------------------------------------------------------------
 #  plot(opt, type="clusters")
