@@ -5,15 +5,16 @@
 \title{Set control values for use with MEDseq_fit}
 \usage{
 MEDseq_control(algo = c("EM", "CEM", "cemEM"), 
-               init.z = c("kmedoids", "hc", "random", "list"), 
+               init.z = c("kmedoids", "kmodes", "kmodes2", "hc", "random", "list"), 
                z.list = NULL, 
                dist.mat = NULL, 
                unique = TRUE, 
-               criterion = c("dbs", "asw", "bic", "icl", "aic", "cv", "nec"), 
+               criterion = c("bic", "icl", "aic", "dbs", "asw", "cv", "nec"), 
                tau0 = NULL, 
                noise.gate = TRUE, 
-               do.nec = FALSE, 
+               random = TRUE,
                do.cv = FALSE, 
+               do.nec = FALSE, 
                nfolds = 10L, 
                nstarts = 1L, 
                stopping = c("aitken", "relative"), 
@@ -30,11 +31,13 @@ MEDseq_control(algo = c("EM", "CEM", "cemEM"),
 \arguments{
 \item{algo}{Switch controlling whether models are fit using the \code{"EM"} (the default) or \code{"CEM"} algorithm. The option \code{"cemEM"} allows running the EM algorithm starting from convergence of the CEM algorithm.}
 
-\item{init.z}{The method used to initialise the cluster labels. Defaults to "\code{kmedoids}". Other options include Ward hierarchical clustering ("\code{hc}"), "\code{random}" initialisation, and a user-supplied "\code{list}".}
+\item{init.z}{The method used to initialise the cluster labels. Defaults to \code{"kmedoids"}. Other options include \code{"kmodes"}, \code{"kmodes2"}, Ward's hierarchical clustering (\code{"hc"}), \code{"random"} initialisation, and a user-supplied \code{"list"}. For weighted sequences, \code{"kmedoids"} is itself initialised using Ward's hierarchical clustering.
+
+The \code{"kmodes"} and \code{"kmodes2"} options require loading the suggested \pkg{klaR} package (>= 0.6-13). They are currently only available for \strong{unweighted} sequences. Under \code{"kmodes"}, the algorithm is itself initialised via the medoids of a call to \code{\link[cluster]{pam}}. The option \code{"kmodes2"} is slightly faster, by virtue of using random initial modes. Final results are thus also subject to randomness (unless \code{\link{set.seed}} is invoked).}
 
 \item{z.list}{A user supplied list of initial cluster allocation matrices, with number of rows given by the number of observations, and numbers of columns given by the range of component numbers being considered. Only relevant if \code{init.z == "z.list"}. These matrices are allowed correspond to both soft or hard clusterings, and will be internally normalised so that the rows sum to 1.}
 
-\item{dist.mat}{An optional distance matrix to use for initialisation when \code{init.z} is one of "\code{kmedoids}" or "\code{hc}". Defaults to a Hamming distance matrix. This is an experimental feature and should only be tampered with by expert users.}
+\item{dist.mat}{An optional distance matrix to use for initialisation when \code{init.z} is one of \code{"kmedoids"} or \code{"hc"}. Defaults to a Hamming distance matrix. This is an experimental feature and should only be tampered with by expert users.}
 
 \item{unique}{A logical indicating whether the model is fit only to the unique observations (defaults to \code{TRUE}). When there are covariates, this means all unique combinations of covariate and sequence patterns, otherwise only the sequence patterns. 
 
@@ -44,15 +47,17 @@ When \code{weights} \emph{are} supplied and \code{isTRUE(unique)}, the weights a
 
 In both cases, the results will be unchanged, but setting \code{unique} to \code{TRUE} can often be much faster.}
 
-\item{criterion}{When either \code{G} or \code{modtype} is a vector, \code{criterion} governs how the 'best' model is determined when gathering output. Note that all criteria will be returned in any case, if possible.}
+\item{criterion}{When either \code{G} or \code{modtype} is a vector, \code{criterion} governs how the 'best' model is determined when gathering output. Defaults to \code{"bic"}. Note that all criteria will be returned in any case, if possible.}
 
 \item{tau0}{Prior mixing proportion for the noise component. If supplied, a noise component will be added to the model in the estimation, with \code{tau0} giving the prior probability of belonging to the noise component for \emph{all} observations. Typically supplied as a scalar in the interval (0, 1), e.g. \code{0.1}. Can be supplied as a vector when gating covariates are present and \code{noise.gate} is \code{TRUE}.}
 
-\item{noise.gate}{A logical indicating whether gating network covariates influence the mixing proportion for the noise component, if any. Defaults to \code{TRUE}, but leads to greater parsimony if \code{FALSE}. Only relevant in the presence of a noise component; only effects estimation in the presence of gating covariates.}
+\item{noise.gate}{A logical indicating whether gating network covariates influence the mixing proportion for the noise component, if any. Defaults to \code{TRUE}, but leads to greater parsimony if \code{FALSE}. Only relevant in the presence of a noise component (i.e. the \code{"CCN"}, \code{"UCN"}, \code{"CUN"}, and \code{"UUN"} models); only affects estimation in the presence of gating covariates.}
 
-\item{do.nec}{A logical indicating whether the normalised entropy criterion (NEC) should also be computed (for models with more than one component). Defaults to \code{FALSE}. When \code{TRUE}, models with \code{G=1} are fitted always.}
+\item{random}{A logical governing how ties for estimated central sequence positions are handled. When \code{TRUE} (the default), such ties are broken at random. When \code{FALSE} (the implied default up to version 1.1.1 of this package), the first candidate state is always chosen. This argument affects all \code{opti} options. If \code{verbose} is \code{TRUE} and there are tie-breaking operations performed, a warning message is printed once per model, regardless of the number of such operations.}
 
 \item{do.cv}{A logical indicating whether cross-validated log-likelihood scores should also be computed (see \code{nfolds}). Defaults to \code{FALSE} due to significant computational burden incurred.}
+
+\item{do.nec}{A logical indicating whether the normalised entropy criterion (NEC) should also be computed (for models with more than one component). Defaults to \code{FALSE}. When \code{TRUE}, models with \code{G=1} are fitted always.}
 
 \item{nfolds}{The number of folds to use when \code{isTRUE{do.cv}}.}
 
@@ -62,15 +67,15 @@ In both cases, the results will be unchanged, but setting \code{unique} to \code
 
 \item{equalPro}{Logical variable indicating whether or not the mixing proportions are to be constrained to be equal in the model. Default: \code{equalPro = FALSE}. Only relevant when \code{gating} covariates are \emph{not} supplied within \code{\link{MEDseq_fit}}, otherwise ignored. In the presence of a noise component, only the mixing proportions for the non-noise components are constrained to be equal (by default, see \code{equalNoise}), after accounting for the noise component.}
 
-\item{equalNoise}{Logical which is only invoked when \code{isTRUE(equalPro)} and gating covariates are not supplied. Under the default setting (\code{FALSE}), the mixing proportion for the noise component is estimated, and remaining mixing proportions are equal; when \code{TRUE} all components, including the noise component, have equal mixing proportions.}
+\item{equalNoise}{Logical which is \strong{only} invoked when \code{isTRUE(equalPro)} and gating covariates are not supplied. Under the default setting (\code{FALSE}), the mixing proportion for the noise component is estimated, and remaining mixing proportions are equal; when \code{TRUE} all components, including the noise component, have equal mixing proportions.}
 
 \item{tol}{A vector of length two giving relative convergence tolerances for 1) the log-likelihood of the EM/CEM algorithm, and 2) optimisation in the multinomial logistic regression in the gating network, respectively. The default is \code{c(1e-05, 1e-08)}. If only one number is supplied, it is used as the tolerance in both cases.}
 
 \item{itmax}{A vector of length two giving integer limits on the number of iterations for 1) the EM/CEM algorithm, and 2) the multinomial logistic regression in the gating network, respectively. The default is \code{c(.Machine$integer.max, 100)}.}
 
-\item{opti}{Character string indicating how central sequence parameters should be estimated. The default "\code{mode}" is exact and thus this experimental argument should only be tampered with by expert users. The option "\code{medoid}" fixes the central sequence(s) to be one of the observed sequences (like k-medoids). The other options \code{"first"} and \code{"GA"} use the first-improvement and genetic algorithms, respectively, to mutate the medoid. Pre-computation of the Hamming distance matrix for the observed sequences speeds-up computation of all options other than \code{"mode"}.}
+\item{opti}{Character string indicating how central sequence parameters should be estimated. The default \code{"mode"} is exact and thus this experimental argument should only be tampered with by expert users. The option \code{"medoid"} fixes the central sequence(s) to be one of the observed sequences (like k-medoids). The other options \code{"first"} and \code{"GA"} use the first-improvement and genetic algorithms, respectively, to mutate the medoid. Pre-computation of the Hamming distance matrix for the observed sequences speeds-up computation of all options other than \code{"mode"}.}
 
-\item{ordering}{Experimental feature that should only be tampered with by experienced users. Allows sequences to be reordered on the basis of the column-wise entropy when \code{opti} is "\code{first}" or "\code{GA}".}
+\item{ordering}{Experimental feature that should only be tampered with by experienced users. Allows sequences to be reordered on the basis of the column-wise entropy when \code{opti} is \code{"first"} or \code{"GA"}.}
 
 \item{MaxNWts}{The maximum allowable number of weights in the call to \code{\link[nnet]{multinom}} for the multinomial logistic regression in the gating network. There is no intrinsic limit in the code, but increasing \code{MaxNWts} will probably allow fits that are very slow and time-consuming. It may be necessary to increase \code{MaxNWts} when categorical concomitant variables with many levels are included or the number of components is high.}
 
@@ -91,16 +96,16 @@ Supplies a list of arguments (with defaults) for use with \code{\link{MEDseq_fit
 \dontshow{suppressMessages(require(TraMineR))}
 data(mvad)
 
-# The CC MEDseq model is equivalent to k-medoids when the CEM 
-# algorithm is employed, mixing proportions are constrained,
+# The CC MEDseq model is almost equivalent to k-medoids when the
+# CEM algorithm is employed, mixing proportions are constrained,
 # and the central sequences are restricted to the observed sequences
 ctrl   <- MEDseq_control(algo="CEM", equalPro=TRUE, opti="medoid", criterion="asw")
 \donttest{
 # Note that ctrl must be explicitly named 'ctrl'
-mod   <- MEDseq_fit(seqdef(mvad[,15:86]), G=8, modtype="CC", weights=mvad$weight, ctrl=ctrl)
+mod   <- MEDseq_fit(seqdef(mvad[,17:86]), G=11, modtype="CC", weights=mvad$weight, ctrl=ctrl)
 
 # Alternatively, specify the control arguments directly
-mod   <- MEDseq_fit(seqdef(mvad[,15:86]), G=8, modtype="CC", weights=mvad$weight,
+mod   <- MEDseq_fit(seqdef(mvad[,17:86]), G=11, modtype="CC", weights=mvad$weight,
                     algo="CEM", equalPro=TRUE, opti="medoid", criterion="asw")
 
 # Note that supplying control arguments via a mix of the ... construct and the named argument 
@@ -109,12 +114,12 @@ mod   <- MEDseq_fit(seqdef(mvad[,15:86]), G=8, modtype="CC", weights=mvad$weight
 \references{
 Murphy, K., Murphy, T. B., Piccarreta, R., and Gormley, I. C. (2019). Clustering longitudinal life-course sequences using mixtures of exponential-distance models. \emph{To appear}. <\href{https://arxiv.org/abs/1908.07963}{arXiv:1908.07963}>.
 
-Menardi, G. (2011). Density-based Silhouette diagnostics for clustering methods. \emph{Statistics and Computing} 21(3): 295-308.
+Menardi, G. (2011). Density-based Silhouette diagnostics for clustering methods. \emph{Statistics and Computing}, 21(3): 295-308.
 }
 \seealso{
-\code{\link{MEDseq_fit}}, \code{\link{dbs}}, \code{\link[WeightedCluster]{wcKMedoids}}, \code{\link[cluster]{pam}}, \code{\link[cluster]{agnes}}, \code{\link[stats]{hclust}}, \code{\link[TraMineR]{seqdist}}, \code{\link[nnet]{multinom}}, \code{\link{MEDseq_compare}}
+\code{\link{MEDseq_fit}}, \code{\link{dbs}}, \code{\link[WeightedCluster]{wcKMedoids}}, \code{\link[cluster]{pam}}, \code{\link[cluster]{agnes}}, \code{\link[klaR]{kmodes}}, \code{\link[stats]{hclust}}, \code{\link[TraMineR]{seqdist}}, \code{\link[nnet]{multinom}}, \code{\link{MEDseq_compare}}
 }
 \author{
-Keefe Murphy - <\email{keefe.murphy@ucd.ie}>
+Keefe Murphy - <\email{keefe.murphy@mu.ie}>
 }
 \keyword{control}

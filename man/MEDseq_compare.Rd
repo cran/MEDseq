@@ -6,14 +6,16 @@
 \title{Choose the best MEDseq model}
 \usage{
 MEDseq_compare(...,
-               criterion = c("dbs", "asw", "bic", 
-                             "icl", "aic", "cv", "nec"),
+               criterion = c("bic", "icl", "aic", 
+                             "dbs", "asw", "cv", "nec"),
                pick = 10L,
                optimal.only = FALSE)
 
 \method{print}{MEDseqCompare}(x,
       index = seq_len(x$pick),
+      rerank = FALSE,
       digits = 3L,
+      maxi = length(index),
       ...)
 }
 \arguments{
@@ -21,17 +23,19 @@ MEDseq_compare(...,
 
 This argument is only relevant for the \code{\link{MEDseq_compare}} function and will be ignored for the associated \code{print} function.}
 
-\item{criterion}{The criterion used to determine the ranking. Defaults to \code{"dbs"}, the density-based silhouette.}
+\item{criterion}{The criterion used to determine the ranking. Defaults to \code{"bic"}.}
 
 \item{pick}{The (integer) number of models to be ranked and compared. Defaults to \code{10L}. Will be constrained by the number of models within the \code{"MEDseq"} objects supplied via \code{...} if \code{optimal.only} is \code{FALSE}, otherwise constrained simply by the number of \code{"MEDseq"} objects supplied. Setting \code{pick=Inf} is a valid way to select all models.}
 
-\item{optimal.only}{Logical indicating whether to only rank models already deemed optimal within each \code{"MEDeq"} object (\code{TRUE}), or to allow models which were deemed suboptimal enter the final ranking (\code{FALSE}, the default). See \code{details}.}
+\item{optimal.only}{Logical indicating whether to only rank models already deemed optimal within each \code{"MEDeq"} object (\code{TRUE}), or to allow models which were deemed suboptimal enter the final ranking (\code{FALSE}, the default). See \code{Details}.}
 
-\item{x, index, digits, }{Arguments required for the associated \code{print} function:
+\item{x, index, rerank, digits, maxi}{Arguments required for the associated \code{print} function:
 \describe{
 \item{\code{x}}{An object of class \code{"MEDseqCompare"} resulting from a call to \code{\link{MEDseq_compare}}.}
-\item{\code{index}}{A logical or numeric vector giving the indices of the rows of the table of ranked models to print. This defaults to the full set of ranked models. It can be useful when the table of ranked models is large to examine a subset via this \code{index} argument, for display purposes.}
-\item{\code{digits}}{The number of decimal places to round model selection criteria to (defaults to 3).}}}
+\item{\code{index}}{A logical or numeric vector giving the indices of the rows of the table of ranked models to print. This defaults to the full set of ranked models. It can be useful when the table of ranked models is large to examine a subset via this \code{index} argument, for display purposes. See \code{rerank}.}
+\item{\code{rerank}}{A logical indicating whether the ranks should be recomputed when subsetting using \code{index}. Defaults to \code{FALSE}.}
+\item{\code{digits}}{The number of decimal places to round model selection criteria to (defaults to 3).}
+\item{\code{maxi}}{A number specifying the maximum number of rows/models to print. Defaults to \code{length(index)}.}}}
 }
 \value{
 A list of class \code{"MEDseqCompare"}, for which a dedicated print function exists, containing the following elements (each of length \code{pick}, and ranked according to \code{criterion}, where appropriate):
@@ -46,21 +50,22 @@ A list of class \code{"MEDseqCompare"}, for which a dedicated print function exi
 \item{\code{bic}}{BIC values, ranked according to \code{criterion}.}
 \item{\code{icl}}{TCL values, ranked according to \code{criterion}.}
 \item{\code{aic}}{AIC values, ranked according to \code{criterion}.}
-\item{\code{cv}}{Cross-validated log-likelihood values, ranked according to \code{criterion}.}
-\item{\code{nec}}{NEC values, ranked according to \code{criterion}.}
 \item{\code{dbs}}{(Weighted) mean/median DBS values, ranked according to \code{criterion}.}
 \item{\code{asw}}{(Weighted) mean/median ASW values, ranked according to \code{criterion}.}
+\item{\code{cv}}{Cross-validated log-likelihood values, ranked according to \code{criterion}.}
+\item{\code{nec}}{NEC values, ranked according to \code{criterion}.}
 \item{\code{loglik}}{Maximal log-likelihood values, ranked according to \code{criterion}.}
 \item{\code{gating}}{The gating formulas.}
 \item{\code{algo}}{The algorithm used for fitting the model - either \code{"EM"}, \code{"CEM"}, \code{"cemEM"}.}
 \item{\code{equalPro}}{Logical indicating whether mixing proportions were constrained to be equal across components.}
+\item{\code{opti}}{The method used for estimating the central sequence(s).}
 \item{\code{weights}}{Logical indicating whether the given model was fitted with sampling weights.}
 \item{\code{noise}}{Logical indicating the presence/absence of a noise component. Only displayed if at least one of the compared models has a noise component.}
 \item{\code{noise.gate}}{Logical indicating whether gating covariates were allowed to influence the noise component's mixing proportion. Only printed for models with a noise component, when at least one of the compared models has gating covariates.}
 \item{\code{equalNoise}}{Logical indicating whether the mixing proportion of the noise component for \code{equalPro} models is also equal (\code{TRUE}) or estimated (\code{FALSE}).}
 }
 \description{
-Takes one or more sets of "\code{MEDseq}" models fitted by \code{\link{MEDseq_fit}} and ranks them according to a specified model selection criterion. It's possible to respect the internal ranking within each set of models, or to discard models within each set which were already deemed sub-optimal. This function can help with model selection via exhaustive or stepwise searches.
+Takes one or more sets of \code{"MEDseq"} models fitted by \code{\link{MEDseq_fit}} and ranks them according to a specified model selection criterion. It's possible to respect the internal ranking within each set of models, or to discard models within each set which were already deemed sub-optimal. This function can help with model selection via exhaustive or stepwise searches.
 }
 \details{
 The purpose of this function is to conduct model selection on \code{"MEDseq"} objects, fit to the same data set, with different combinations of gating network covariates or different initialisation settings.
@@ -79,24 +84,27 @@ A dedicated \code{print} function exists for objects of class \code{"MEDseqCompa
 \examples{
 \dontshow{suppressMessages(require(TraMineR))}
 data(biofam)
-seqs <- seqdef(biofam[10:25] + 1L)
+seqs <- seqdef(biofam[10:25] + 1L,
+               states = c("P", "L", "M", "L+M", "C", 
+                          "L+C", "L+M+C", "D"))
 covs <- biofam[2:3]
 \donttest{ 
 # Fit a range of models
 # m1   <- MEDseq_fit(seqs, G=9:10)
-# m2   <- MEDseq_fit(seqs, G=9:10, gating=~sex, covars=covs)
-# m3   <- MEDseq_fit(seqs, G=9:10, gating=~birthyr, covars=covs)
-# m4   <- MEDseq_fit(seqs, G=9:10, gating=~sex + birthyr, covars=covs)
+# m2   <- MEDseq_fit(seqs, G=9:10, gating=~sex, covars=covs, noise.gate=FALSE)
+# m3   <- MEDseq_fit(seqs, G=9:10, gating=~birthyr, covars=covs, noise.gate=FALSE)
+# m4   <- MEDseq_fit(seqs, G=9:10, gating=~sex + birthyr, covars=covs, noise.gate=FALSE)
 
-# Rank only the optimal models. Examine the best model and its gating network
-# (comp <- MEDseq_compare(m1, m2, m3, m4, optimal.only=TRUE))
+# Rank only the optimal models (according to the dbs criterion)
+# Examine the best model in more detail
+# (comp <- MEDseq_compare(m1, m2, m3, m4, criterion="dbs", optimal.only=TRUE))
 # (best <- comp$optimal)
-# (summ <- summary(best, classification = TRUE, gating=TRUE))
+# (summ <- summary(best, parameters=TRUE))
 
 # Examine all models visited, including those already deemed suboptimal
 # Only print models with gating covariates & 10 components
-# comp2 <- MEDseq_compare(m1, m2, m3, m4, pick=Inf)
-# print(comp2, comp2$gating != "None" & comp2$G == 10)}
+# comp2 <- MEDseq_compare(comp, m1, m2, m3, m4, criterion="dbs", pick=Inf)
+# print(comp2, index=comp2$gating != "None" & comp2$G == 10)}
 }
 \references{
 Murphy, K., Murphy, T. B., Piccarreta, R., and Gormley, I. C. (2019). Clustering longitudinal life-course sequences using mixtures of exponential-distance models. \emph{To appear}. <\href{https://arxiv.org/abs/1908.07963}{arXiv:1908.07963}>.
@@ -105,7 +113,7 @@ Murphy, K., Murphy, T. B., Piccarreta, R., and Gormley, I. C. (2019). Clustering
 \code{\link{MEDseq_fit}}, \code{\link{plot.MEDseq}}
 }
 \author{
-Keefe Murphy - <\email{keefe.murphy@ucd.ie}>
+Keefe Murphy - <\email{keefe.murphy@mu.ie}>
 }
 \keyword{clustering}
 \keyword{main}

@@ -7,8 +7,8 @@
 get_MEDseq_results(x,
                    what = c("z", "MAP", "DBS", "ASW"), 
                    rank = 1L, 
-                   criterion = c("dbs", "asw", "bic", "icl", 
-                                 "aic", "cv", "nec", "loglik"), 
+                   criterion = c("bic", "icl", "aic", "dbs", 
+                                 "asw", "cv", "nec", "loglik"), 
                    G = NULL, 
                    modtype = NULL, 
                    noise = TRUE, 
@@ -21,11 +21,11 @@ get_MEDseq_results(x,
 
 \item{rank}{A number indicating what \code{rank} model results should be extracted from, where the \code{rank} is determined by \code{criterion}. Defaults to \code{1}, i.e. the best model.}
 
-\item{criterion}{The \code{criterion} used to determine the ranking. Defaults to "\code{dbs}".}
+\item{criterion}{The \code{criterion} used to determine the ranking. Defaults to \code{"bic"}.}
 
-\item{G}{Optional argument giving the number of components in the model for which results are desired.}
+\item{G}{Optional argument giving the number of components in the model for which results are desired. Can be supplied with or without also specifying \code{modtype}.}
 
-\item{modtype}{Optional argument the desired model type for which results are desired.}
+\item{modtype}{Optional argument giving the desired model type for which results are desired. Can be supplied with or without also specifying \code{G}.}
 
 \item{noise}{A logical indicating whether models with a noise component should be considered. Defaults to \code{TRUE}.}
 
@@ -35,7 +35,7 @@ get_MEDseq_results(x,
 The desired results extracted from the \code{MEDseq} model.
 }
 \description{
-Utility function for extracting results of submodels from "\code{MEDseq}" object when a range of models were run via \code{\link{MEDseq_fit}}.
+Utility function for extracting results of submodels from \code{"MEDseq"} objects when a range of models were run via \code{\link{MEDseq_fit}}.
 }
 \details{
 The arguments \code{rank} and \code{criterion} are invoked when one or more of the arguments \code{G} and \code{modtype} are missing. Thus, supplying \code{G} and \code{modtype} allows \code{rank} and \code{criterion} to be bypassed entirely.
@@ -50,12 +50,15 @@ Arguments to this function can be supplied to \code{\link{plot.MEDseq}} via the 
 # mod <- MEDseq_fit(seqdef(biofam[10:25] + 1L), G=9:10)
 
 # Extract the MAP clustering of the best 9-cluster model according to the asw criterion
-# get_MEDseq_results(mod, what="MAP", G=9, criterion="asw")}
+# get_MEDseq_results(mod, what="MAP", G=9, criterion="asw")
+
+# Extract the DBS values of the best UUN model according to the dbs criterion
+# get_MEDseq_results(mod, what="DBS", modtype="UUN", criterion="dbs")}
 }
 \seealso{
 \code{\link{MEDseq_fit}}, \code{\link{plot.MEDseq}}
 }
 \author{
-Keefe Murphy - <\email{keefe.murphy@ucd.ie}>
+Keefe Murphy - <\email{keefe.murphy@mu.ie}>
 }
 \keyword{utility}

@@ -8,6 +8,7 @@ dbs(z,
     ztol = 1E-100,
     weights = NULL,
     summ = c("mean", "median"),
+    clusters = NULL,
     ...)
 }
 \arguments{
@@ -17,7 +18,9 @@ dbs(z,
 
 \item{weights}{An optional numeric vector giving observation-specific weights for computing the (weighted) mean/median DBS (see \code{summ}).}
 
-\item{summ}{A single character string indicating whether the (possibly weighted) "\code{mean}" (the default) or "\code{median}" DBS should be computed.}
+\item{summ}{A single character string indicating whether the (possibly weighted) \code{"mean"} (the default) or \code{"median"} DBS should be computed.}
+
+\item{clusters}{Optional/experimental argument for giving the indicator labels of the cluster assignments. Defaults to the MAP assignment derived from \code{z} when not supplied. Note that actually supplying the MAP assignment here is slightly less efficient than the \code{NULL} default and \strong{not} advised.}
 
 \item{...}{Catches unused arguments.}
 }
@@ -32,7 +35,7 @@ A list with the following elements:
 Computes the Density-based Silhouette for a 'soft' clustering assignment matrix.
 }
 \note{
-When calling \code{\link{MEDseq_fit}}, the \code{summ} argument can be passed via the \code{...} construct, in which case it governs both the DBS and ASW criteria.
+When calling \code{\link{MEDseq_fit}}, the \code{summ} argument can be passed via the \code{...} construct, in which case it governs both the \code{dbs} and \code{asw} criteria.
 }
 \examples{
 \dontshow{suppressMessages(require(TraMineR))}
@@ -40,23 +43,23 @@ When calling \code{\link{MEDseq_fit}}, the \code{summ} argument can be passed vi
 z <- abs(matrix(rnorm(50), ncol=2))
 z <- z/rowSums(z)
 
-# Return the mean DBS width
-dbs(z)$msw
+# Return the median DBS width
+dbs(z, summ="median")$msw
 
 # For real sequence data
 data(mvad)
 \donttest{
-mod <- MEDseq_fit(seqdef(mvad[,15:86]), G=10, modtype="UCN", weights=mvad$weight)
+mod <- MEDseq_fit(seqdef(mvad[,17:86]), G=11, modtype="UUN", weights=mvad$weight)
 
 dbs(mod$z, weights=mvad$weight)}
 }
 \references{
-Menardi, G. (2011). Density-based Silhouette diagnostics for clustering methods. \emph{Statistics and Computing} 21(3): 295-308.
+Menardi, G. (2011). Density-based Silhouette diagnostics for clustering methods. \emph{Statistics and Computing}, 21(3): 295-308.
 }
 \seealso{
 \code{\link{MEDseq_fit}}
 }
 \author{
-Keefe Murphy - <\email{keefe.murphy@ucd.ie}>
+Keefe Murphy - <\email{keefe.murphy@mu.ie}>
 }
 \keyword{utility}

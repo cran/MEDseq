@@ -14,7 +14,7 @@ MEDseq_stderr(mod,
 
 \item{method}{The method used to compute the standard errors (defaults to \code{"WLBS"}, the Weighted Likelihood Bootstrap).}
 
-\item{N}{The (integer) number of samples to use when the \code{"WLBS"} \code{method} is employed. Defaults to \code{1000L}. Not relevant when \code{method="Jackknife"}, in which case \code{N} is always the number of observations. Must be > 1.}
+\item{N}{The (integer) number of samples to use when the \code{"WLBS"} \code{method} is employed. Defaults to \code{1000L}. Not relevant when \code{method="Jackknife"}, in which case \code{N} is always the number of observations. Must be > 1, though \code{N} being greater than or equal to the sample size is recommended under \code{method="WLBS"}.}
 
 \item{symmetric}{A logical indicating whether symmetric draws from the uniform Dirichlet distribution are used for the \code{WLBS} method in the presence of existing sampling weights. Defaults to \code{TRUE}; when \code{FALSE}, the concentration parameters of the Dirichlet distribution are given by the sampling weights. Only relevant when \code{method="WLBS"} for models with existing sampling weights.}
 }
@@ -37,19 +37,20 @@ data(mvad)
 mvad$Location <- factor(apply(mvad[,5:9], 1L, function(x) 
                  which(x == "yes")), labels = colnames(mvad[,5:9]))
 mvad          <- list(covariates = mvad[c(3:4,10:14,87)],
-                      sequences = mvad[,15L:86L], 
+                      sequences = mvad[,15:86], 
                       weights = mvad[,2])
 mvad.cov      <- mvad$covariates
+
+# Create a state sequence object with the first two (summer) time points removed
 states        <- c("EM", "FE", "HE", "JL", "SC", "TR")
 labels        <- c("Employment", "Further Education", "Higher Education", 
                    "Joblessness", "School", "Training")
-mvad.seq      <- seqdef(mvad$sequences, states=states, labels=labels)
+mvad.seq      <- seqdef(mvad$sequences[-c(1,2)], states=states, labels=labels)
 \donttest{
-# Fit a model with weights and gating covariates
-# Drop the 1st time point which was used to define the weights
-# mvad.seq2   <- seqdef(mvad$sequences[,-1], states=states, labels=labels)
-# mod         <- MEDseq_fit(mvad.seq2, G=10, modtype="UCN", weights=mvad$weights, 
-#                           gating=~ fmpr + gcse5eq + livboth, covars=mvad.cov)
+# Fit a model with weights and a gating covariate
+# Have the probability of noise-component membership be constant
+# mod         <- MEDseq_fit(mvad.seq, G=11, modtype="UUN", weights=mvad$weights, 
+#                           gating=~ gcse5eq, covars=mvad.cov, noise.gate=FALSE)
                             
 # Estimate standard errors using 100 WLBS samples
 # (std        <- MEDseq_stderr(mod, N=100))}
@@ -57,13 +58,13 @@ mvad.seq      <- seqdef(mvad$sequences, states=states, labels=labels)
 \references{
 Murphy, K., Murphy, T. B., Piccarreta, R., and Gormley, I. C. (2019). Clustering longitudinal life-course sequences using mixtures of exponential-distance models. \emph{To appear}. <\href{https://arxiv.org/abs/1908.07963}{arXiv:1908.07963}>.
 
-O'Hagan, A., Murphy, T. B., Scrucca, L., and Gormley, I. C. (2019). Investigation of parameter uncertainty in clustering using a Gaussian mixture model via jackknife, bootstrap and weighted likelihood bootstrap. \emph{Computational Statistics} 34(4): 1779-1813.
+O'Hagan, A., Murphy, T. B., Scrucca, L., and Gormley, I. C. (2019). Investigation of parameter uncertainty in clustering using a Gaussian mixture model via jackknife, bootstrap and weighted likelihood bootstrap. \emph{Computational Statistics}, 34(4): 1779-1813.
 }
 \seealso{
 \code{\link{MEDseq_fit}}
 }
 \author{
-Keefe Murphy - <\email{keefe.murphy@ucd.ie}>
+Keefe Murphy - <\email{keefe.murphy@mu.ie}>
 }
 \keyword{clustering}
 \keyword{main}

@@ -6,7 +6,7 @@
 \alias{MEDseq-package}
 \title{MEDseq: Mixtures of Exponential-Distance Models with Covariates}
 \description{
-Fits MEDseq models: mixtures of Exponential-Distance models with gating covariates and sampling weights. Typically used for clustering categorical/longitudinal life-course sequences
+Fits MEDseq models: mixtures of Exponential-Distance models with gating covariates and sampling weights. Typically used for clustering categorical/longitudinal life-course sequences.
 }
 \section{Usage}{
 
@@ -32,8 +32,8 @@ Finally, the package also contains two data sets: \code{\link{biofam}} and \code
 \itemize{
 \item{Type: }{Package}
 \item{Package: }{MEDseq}
-\item{Version: }{1.1.1}
-\item{Date: }{2020-05-12 (this version), 2019-08-24 (original release)}
+\item{Version: }{1.2.0}
+\item{Date: }{2020-11-20 (this version), 2019-08-24 (original release)}
 \item{Licence: }{GPL (>=2)}
 }
 }
@@ -51,28 +51,29 @@ data(mvad)
 mvad$Location <- factor(apply(mvad[,5:9], 1L, function(x) 
                  which(x == "yes")), labels = colnames(mvad[,5:9]))
 mvad          <- list(covariates = mvad[c(3:4,10:14,87)],
-                      sequences = mvad[,15L:86L], 
+                      sequences = mvad[,15:86], 
                       weights = mvad[,2])
 mvad.cov      <- mvad$covariates
+
+# Create a state sequence object with the first two (summer) time points removed
 states        <- c("EM", "FE", "HE", "JL", "SC", "TR")
-labels        <- c("Employment", "FE", "HE", "Joblessness", "School", "Training")
-mvad.seq      <- seqdef(mvad$sequences, states=states, labels=labels)
+labels        <- c("Employment", "Further Education", "Higher Education", 
+                   "Joblessness", "School", "Training")
+mvad.seq      <- seqdef(mvad$sequences[-c(1,2)], states=states, labels=labels)
 \donttest{                         
 # Fit a range of unweighted models without covariates
 # Only consider models with a noise component
 # Supply some MEDseq_control() arguments
 mod1          <- MEDseq_fit(mvad.seq, G=9:10, modtype=c("CCN", "CUN", "UCN", "UUN"),
-                            algo="CEM", init.z="hc", criterion="asw")
+                            algo="CEM", init.z="kmodes", criterion="icl")
 
 # Fit a model with weights and gating covariates
-# Drop the 1st time point which was used to define the weights
-mvad.seq2     <- seqdef(mvad$sequences[,-1], states=states, labels=labels)
-mod2          <- MEDseq_fit(mvad.seq2, G=10, modtype="UCN", weights=mvad$weights, 
-                            gating=~ fmpr + gcse5eq + livboth, covars=mvad.cov)
+# Have the probability of noise-component membership be constant
+mod2          <- MEDseq_fit(mvad.seq, G=11, modtype="UUN", weights=mvad$weights, 
+                            gating=~ gcse5eq, covars=mvad.cov, noise.gate=FALSE)
                             
-# Examine this model in greater detail
-summary(mod2, parameters=TRUE)
-summary(mod2$gating)
+# Examine this model and its gating network
+summary(mod2, network=TRUE)
 plot(mod2, "clusters")}
 }
 \references{
@@ -89,6 +90,6 @@ Useful links:
 \author{
 Keefe Murphy [aut, cre], Thomas Brendan Murphy [ctb], Raffaella Piccarreta [ctb], Isobel Claire Gormley [ctb]
 
-\strong{Maintainer}: Keefe Murphy - <\email{keefe.murphy@ucd.ie}>
+\strong{Maintainer}: Keefe Murphy - <\email{keefe.murphy@mu.ie}>
 }
 \keyword{package}

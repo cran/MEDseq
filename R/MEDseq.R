@@ -1,6 +1,6 @@
 #' MEDseq: Mixtures of Exponential-Distance Models with Covariates
 #'
-#' Fits MEDseq models: mixtures of Exponential-Distance models with gating covariates and sampling weights. Typically used for clustering categorical/longitudinal life-course sequences
+#' Fits MEDseq models: mixtures of Exponential-Distance models with gating covariates and sampling weights. Typically used for clustering categorical/longitudinal life-course sequences.
 #' @section Usage:
 #' Fits _MEDseq_ models introduced by Murphy et al. (2019) <\href{https://arxiv.org/abs/1908.07963}{arXiv:1908.07963}>, i.e. fits mixtures of exponential-distance models for clustering longitudinal life-course sequence data via the EM/CEM algorithm. 
 #' 
@@ -22,8 +22,8 @@
 #' \itemize{
 #' \item{Type: }{Package}
 #' \item{Package: }{MEDseq}
-#' \item{Version: }{1.1.1}
-#' \item{Date: }{2020-05-12 (this version), 2019-08-24 (original release)}
+#' \item{Version: }{1.2.0}
+#' \item{Date: }{2020-11-20 (this version), 2019-08-24 (original release)}
 #' \item{Licence: }{GPL (>=2)}
 #' }
 #'
@@ -34,7 +34,7 @@
 #' @author
 #' Keefe Murphy [aut, cre], Thomas Brendan Murphy [ctb], Raffaella Piccarreta [ctb], Isobel Claire Gormley [ctb]
 #'
-#' \strong{Maintainer}: Keefe Murphy - <\email{keefe.murphy@@ucd.ie}>
+#' \strong{Maintainer}: Keefe Murphy - <\email{keefe.murphy@@mu.ie}>
 #' @references Murphy, K., Murphy, T. B., Piccarreta, R., and Gormley, I. C. (2019). Clustering longitudinal life-course sequences using mixtures of exponential-distance models. \emph{To appear}. <\href{https://arxiv.org/abs/1908.07963}{arXiv:1908.07963}>.
 #' @examples
 #' \dontshow{suppressMessages(require(TraMineR))}
@@ -43,39 +43,46 @@
 #' mvad$Location <- factor(apply(mvad[,5:9], 1L, function(x) 
 #'                  which(x == "yes")), labels = colnames(mvad[,5:9]))
 #' mvad          <- list(covariates = mvad[c(3:4,10:14,87)],
-#'                       sequences = mvad[,15L:86L], 
+#'                       sequences = mvad[,15:86], 
 #'                       weights = mvad[,2])
 #' mvad.cov      <- mvad$covariates
+#' 
+#' # Create a state sequence object with the first two (summer) time points removed
 #' states        <- c("EM", "FE", "HE", "JL", "SC", "TR")
-#' labels        <- c("Employment", "FE", "HE", "Joblessness", "School", "Training")
-#' mvad.seq      <- seqdef(mvad$sequences, states=states, labels=labels)
+#' labels        <- c("Employment", "Further Education", "Higher Education", 
+#'                    "Joblessness", "School", "Training")
+#' mvad.seq      <- seqdef(mvad$sequences[-c(1,2)], states=states, labels=labels)
 #' \donttest{                         
 #' # Fit a range of unweighted models without covariates
 #' # Only consider models with a noise component
 #' # Supply some MEDseq_control() arguments
 #' mod1          <- MEDseq_fit(mvad.seq, G=9:10, modtype=c("CCN", "CUN", "UCN", "UUN"),
-#'                             algo="CEM", init.z="hc", criterion="asw")
+#'                             algo="CEM", init.z="kmodes", criterion="icl")
 #' 
 #' # Fit a model with weights and gating covariates
-#' # Drop the 1st time point which was used to define the weights
-#' mvad.seq2     <- seqdef(mvad$sequences[,-1], states=states, labels=labels)
-#' mod2          <- MEDseq_fit(mvad.seq2, G=10, modtype="UCN", weights=mvad$weights, 
-#'                             gating=~ fmpr + gcse5eq + livboth, covars=mvad.cov)
+#' # Have the probability of noise-component membership be constant
+#' mod2          <- MEDseq_fit(mvad.seq, G=11, modtype="UUN", weights=mvad$weights, 
+#'                             gating=~ gcse5eq, covars=mvad.cov, noise.gate=FALSE)
 #'                             
-#' # Examine this model in greater detail
-#' summary(mod2, parameters=TRUE)
-#' summary(mod2$gating)
+#' # Examine this model and its gating network
+#' summary(mod2, network=TRUE)
 #' plot(mod2, "clusters")}
 #' @docType package
 #' @keywords package
 "_PACKAGE"
 
 .onAttach <- function(lib, pkg) {
-  version <- read.dcf(file.path(lib, pkg, "DESCRIPTION"), "Version")
+  path    <- file.path(lib, pkg, "DESCRIPTION")
+  version <- read.dcf(path, "Version")
+  name    <- read.dcf(path, "Package")
   if(interactive()) {
     packageStartupMessage(paste("\nMixtures of Exponential-Distance Models with Covariates\n___  ___ ___________                      version", version, "\n|  \\/  ||  ___|  _  \\\n| .  . || |__ | | | |___  ___  __ _\n| |\\/| ||  __|| | | / __|/ _ \\/ _` |\n| |  | || |___| |/ /\\__ \\  __/ (_| |\n\\_|  |_/\\____/|___/ |___/\\___|\\__, |\n                                 | |\n                                 |/\n"))                 
   } else   {
-    packageStartupMessage("\nPackage ", sQuote("MEDseq"), " version ", version, ".\n")
+    packageStartupMessage("\nPackage ", sQuote(name), " version ", version, ".\n")
   }
-    packageStartupMessage(paste("See", sQuote("?MEDseq"), "to see a brief guide to how to use this R package.\nSee", sQuote(paste0("citation(", dQuote("MEDseq"),")")) ,"for citing the package in publications.\nSee", sQuote("MEDseq_news()"), "to see new features, changes, and bug fixes.\n"))
+    packageStartupMessage(paste("See", sQuote("?MEDseq"), "to see a brief guide to how to use this R package.\nSee", sQuote(paste0("citation(", dQuote(name),")")) ,"for citing the package in publications.\nSee", sQuote("MEDseq_news()"), "to see new features, changes, and bug fixes.\n"))
+  if(interactive() &&
+     name %in% utils::old.packages()[,1L]) {
+    packageStartupMessage("\n !!! A newer version of this package is available from CRAN !!!")
+  }
 }

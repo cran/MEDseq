@@ -24,44 +24,42 @@ mvad          <- list(covariates = mvad[c(3L:4L,10L:14L,87L)],
                       sequences = mvad[,15L:86L],
                       weights = mvad[,2L])
 mvad.cov      <- mvad$covariates
-mvad.seq      <- seqdef(mvad$sequences[,-1L],
+mvad.seq      <- seqdef(mvad$sequences[-c(1L,2L)],
                         states = c("EM", "FE", "HE", "JL", "SC", "TR"),
                         labels = c("Employment", "Further Education", "Higher Education", 
                                    "Joblessness", "School", "Training"))
 
 ## ---- eval=FALSE--------------------------------------------------------------
-#  mod1 <- MEDseq_fit(mvad.seq, G=10, modtype="UCN", weights=mvad$weights,
-#                     gating=~ fmpr + gcse5eq + livboth, covars=mvad.cov)
+#  mod1 <- MEDseq_fit(mvad.seq, G=11, modtype="UUN", weights=mvad$weights, gating=~ gcse5eq,
+#                     covars=mvad.cov, control=MEDseq_control(noise.gate=FALSE))
 
-## ---- echo=FALSE--------------------------------------------------------------
-mod1 <- MEDseq_fit(mvad.seq, G=10, modtype="UCN", weights=mvad$weights, 
-                   gating=~ fmpr + gcse5eq + livboth, covars=mvad.cov, verbose=FALSE)
+## ---- eval=FALSE--------------------------------------------------------------
+#  # 10-component CUN model with no covariates.
+#  # CUN models have a precision parameter for each sequence position (i.e. time point),
+#  # though each time point's precision is common across clusters.
+#  
+#  mod2 <- MEDseq_fit(mvad.seq, G=10, modtype="CUN", weights=mvad$weights)
+#  
+#  # 12-component CC model with all covariates.
+#  # CC models have a single precision parameter across all clusters and time points.
+#  
+#  mod3 <- MEDseq_fit(mvad.seq, G=12, modtype="CC", weights=mvad$weights,
+#                     gating=~. - Grammar - Location, covars=mvad.cov)
+
+## ---- include=FALSE-----------------------------------------------------------
+load(file="mvad_mod1.rda")
+load(file="mvad_mod2.rda")
+load(file="mvad_mod3.rda")
 
 ## -----------------------------------------------------------------------------
-# 9-component CUN model with no covariates.
-# The CUN model has a precision parameter for each sequence position (i.e. time point),
-# though each time point's precision is common across clusters.
+(comp <- MEDseq_compare(mod1, mod2, mod3, criterion="bic"))
 
-mod2 <- MEDseq_fit(mvad.seq, G=9,  modtype="CUN", weights=mvad$weights, verbose=FALSE)
-
-# 11-component CC model with all coviarates.
-# The CC model has only a single precision parameter across all clusters and time points.
-
-mod3 <- MEDseq_fit(mvad.seq, G=11, modtype="CC", weights=mvad$weights,
-                   gating=~. - Grammar - Location, covars=mvad.cov, verbose=FALSE)
-
-## ---- eval=FALSE--------------------------------------------------------------
-#  (comp <- MEDseq_compare(mod1, mod2, mod3, criterion="dbs"))
-#  opt   <- comp$optimal
-#  summary(opt, classification = TRUE, parameters = FALSE, network = FALSE)
-
-## ---- echo=FALSE--------------------------------------------------------------
-(comp <- MEDseq_compare(mod1, mod2, mod3, criterion="dbs"))
+## -----------------------------------------------------------------------------
 opt   <- comp$optimal
-suppressMessages(summary(opt))
+summary(opt, classification = TRUE, parameters = FALSE, network = FALSE)
 
-## ---- eval=FALSE--------------------------------------------------------------
-#  print(opt$gating)
+## -----------------------------------------------------------------------------
+print(opt$gating)
 
 ## ---- eval=FALSE--------------------------------------------------------------
 #  plot(opt, type="clusters")
@@ -97,23 +95,27 @@ biofam.seq <- seqdef(biofam$sequences,
 #  # The UUN model includes a noise component.
 #  # Otherwise, the model has a precision parameter for each time point in each cluster.
 #  
-#  bio <- MEDseq_fit(biofam.seq, G=10, modtype="UUN",
-#                    gating=~ birthyr, covars=biofam.cov,
-#                    control=MEDseq_control(noise.gate=FALSE))
+#  bio <- MEDseq_fit(biofam.seq, G=10, modtype="UUN", gating=~ birthyr,
+#                    covars=biofam.cov, noise.gate=FALSE)
 
 ## ---- echo=FALSE--------------------------------------------------------------
 bio <- MEDseq_fit(biofam.seq, G=10, modtype="UUN", gating=~ birthyr, 
-                  covars=biofam.cov, control=MEDseq_control(noise.gate=FALSE), verbose=FALSE)
+                  covars=biofam.cov, noise.gate=FALSE, verbose=FALSE)
 
 ## ---- echo=FALSE--------------------------------------------------------------
 bio$call <- bio$call[-length(bio$call)]
+
+## -----------------------------------------------------------------------------
 print(bio)
 
-## -----------------------------------------------------------------------------
-plot(bio, type="clusters", seriate="both")
+## ---- eval=FALSE--------------------------------------------------------------
+#  plot(bio, type="clusters", seriated="both")
+
+## ---- echo=FALSE--------------------------------------------------------------
+knitr::include_graphics("BIO_Clusters.png")
 
 ## -----------------------------------------------------------------------------
-plot(bio, type="precision", log.scale=TRUE)
+plot(bio, type="precision", quant.scale=TRUE, seriated="clusters")
 
 ## ---- fig.height=8.5----------------------------------------------------------
 plot(bio, type="aswvals")
