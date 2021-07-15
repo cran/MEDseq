@@ -42,7 +42,8 @@
 #' states        <- c("EM", "FE", "HE", "JL", "SC", "TR")
 #' labels        <- c("Employment", "Further Education", "Higher Education", 
 #'                    "Joblessness", "School", "Training")
-#' mvad.seq      <- seqdef(mvad$sequences[-c(1,2)], states=states, labels=labels)
+#' mvad.seq      <- seqdef(mvad$sequences[-c(1,2)], states=states, 
+#'                         labels=labels, weights=mvad$weights)
 #' @docType data
 #' @importFrom TraMineR "seqdef"
 #' @source McVicar and Anyadike-Danes (2002)
@@ -90,12 +91,13 @@
 #' \dontshow{suppressMessages(require(TraMineR))}
 #' data(biofam, package="MEDseq")
 #' 
-#' biofam        <- list(covariates = biofam[2L:9L], sequences = biofam[10L:25L] + 1L)
-#' biofam.cov    <- biofam$covariates[,colSums(is.na(biofam$covariates)) == 0]
-#' biofam.seq    <- seqdef(biofam$sequences,
+#' biofam         <- list(covariates = biofam[2L:9L], sequences = biofam[10L:25L] + 1L)
+#' biofam.cov     <- biofam$covariates[,colSums(is.na(biofam$covariates)) == 0]
+#' biofam.seq     <- seqdef(biofam$sequences,
 #'                         states = c("P", "L", "M", "L+M", "C", "L+C", "L+M+C", "D"),
 #'                         labels = c("Parent", "Left", "Married", "Left+Marr", "Child", 
 #'                                    "Left+Child", "Left+Marr+Child", "Divorced"))
+#' biofam.cov$age <- 2002 - biofam.cov$birthyr
 #' @docType data
 #' @importFrom TraMineR "seqdef"
 #' @source Swiss Household Panel \url{https://forscenter.ch/projects/swiss-household-panel/}

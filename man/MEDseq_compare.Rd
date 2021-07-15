@@ -34,7 +34,7 @@ This argument is only relevant for the \code{\link{MEDseq_compare}} function and
 \item{\code{x}}{An object of class \code{"MEDseqCompare"} resulting from a call to \code{\link{MEDseq_compare}}.}
 \item{\code{index}}{A logical or numeric vector giving the indices of the rows of the table of ranked models to print. This defaults to the full set of ranked models. It can be useful when the table of ranked models is large to examine a subset via this \code{index} argument, for display purposes. See \code{rerank}.}
 \item{\code{rerank}}{A logical indicating whether the ranks should be recomputed when subsetting using \code{index}. Defaults to \code{FALSE}.}
-\item{\code{digits}}{The number of decimal places to round model selection criteria to (defaults to 3).}
+\item{\code{digits}}{The number of decimal places to round model selection criteria to (defaults to \code{3}).}
 \item{\code{maxi}}{A number specifying the maximum number of rows/models to print. Defaults to \code{length(index)}.}}}
 }
 \value{
@@ -72,7 +72,7 @@ The purpose of this function is to conduct model selection on \code{"MEDseq"} ob
 
 Model selection will have already been performed in terms of choosing the optimal number of components and MEDseq model type within each supplied set of results, but \code{\link{MEDseq_compare}} will respect the internal ranking of models when producing the final ranking if \code{optimal.only} is \code{FALSE}: otherwise only those models already deemed optimal within each \code{"MEDseq"} object will be ranked.
 
-As such if two sets of results are supplied when \code{optimal.only} is \code{FALSE}, the 1st, 2nd and 3rd best models could all belong to the first set of results, meaning a model deemed suboptimal according to one set of covariates could be superior to one deemed optimal under another set of covariates.
+As such if two sets of results are supplied when \code{optimal.only} is \code{FALSE}, the 1st, 2nd, and 3rd best models could all belong to the first set of results, meaning a model deemed suboptimal according to one set of covariates could be superior to one deemed optimal under another set of covariates.
 }
 \note{
 The \code{criterion} argument here need not comply with the criterion used for model selection within each \code{"MEDseq"} object, but be aware that a mismatch in terms of \code{criterion} \emph{may} require the optimal model to be re-fit in order to be extracted, thereby slowing down \code{\link{MEDseq_compare}}.
@@ -87,13 +87,13 @@ data(biofam)
 seqs <- seqdef(biofam[10:25] + 1L,
                states = c("P", "L", "M", "L+M", "C", 
                           "L+C", "L+M+C", "D"))
-covs <- biofam[2:3]
+covs <- cbind(biofam[2:3], age=2002 - biofam$birthyr)
 \donttest{ 
 # Fit a range of models
 # m1   <- MEDseq_fit(seqs, G=9:10)
-# m2   <- MEDseq_fit(seqs, G=9:10, gating=~sex, covars=covs, noise.gate=FALSE)
-# m3   <- MEDseq_fit(seqs, G=9:10, gating=~birthyr, covars=covs, noise.gate=FALSE)
-# m4   <- MEDseq_fit(seqs, G=9:10, gating=~sex + birthyr, covars=covs, noise.gate=FALSE)
+# m2   <- MEDseq_fit(seqs, G=9:10, gating=~sex,       covars=covs, noise.gate=FALSE)
+# m3   <- MEDseq_fit(seqs, G=9:10, gating=~age,       covars=covs, noise.gate=FALSE)
+# m4   <- MEDseq_fit(seqs, G=9:10, gating=~sex + age, covars=covs, noise.gate=FALSE)
 
 # Rank only the optimal models (according to the dbs criterion)
 # Examine the best model in more detail
@@ -107,7 +107,7 @@ covs <- biofam[2:3]
 # print(comp2, index=comp2$gating != "None" & comp2$G == 10)}
 }
 \references{
-Murphy, K., Murphy, T. B., Piccarreta, R., and Gormley, I. C. (2019). Clustering longitudinal life-course sequences using mixtures of exponential-distance models. \emph{To appear}. <\href{https://arxiv.org/abs/1908.07963}{arXiv:1908.07963}>.
+Murphy, K., Murphy, T. B., Piccarreta, R., and Gormley, I. C. (2021). Clustering longitudinal life-course sequences using mixtures of exponential-distance models. \emph{Journal of the Royal Statistical Society: Series A (Statistics in Society)}, advance online publication, pp. 1-38. <\href{https://rss.onlinelibrary.wiley.com/doi/abs/10.1111/rssa.12712}{doi:10.1111/rssa.12712}>.
 }
 \seealso{
 \code{\link{MEDseq_fit}}, \code{\link{plot.MEDseq}}

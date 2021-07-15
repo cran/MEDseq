@@ -1,8 +1,8 @@
 ## ----setup, include=FALSE-----------------------------------------------------
 knitr::opts_chunk$set(fig.width=7, fig.height=7, fig.align = 'center', 
-                      fig.show='hold', warning=FALSE, 
+                      fig.show='hold', warning=FALSE,
                       message=FALSE, progress=FALSE, 
-                      collapse=TRUE, comments="#>")
+                      collapse=TRUE, comment="#>")
 
 if(isTRUE(capabilities("cairo"))) {
   knitr::opts_chunk$set(dev.args=list(type="cairo"))
@@ -35,7 +35,7 @@ mvad.seq      <- seqdef(mvad$sequences[-c(1L,2L)],
                                    "Joblessness", "School", "Training"))
 
 ## ---- eval=FALSE--------------------------------------------------------------
-#  mod1 <- MEDseq_fit(mvad.seq, G=11, modtype="UUN", weights=mvad$weights, gating=~ gcse5eq,
+#  mod1 <- MEDseq_fit(mvad.seq, G=11, modtype="UUN", weights=mvad$weights, gating= ~ gcse5eq,
 #                     covars=mvad.cov, control=MEDseq_control(noise.gate=FALSE))
 
 ## ---- eval=FALSE--------------------------------------------------------------
@@ -49,7 +49,7 @@ mvad.seq      <- seqdef(mvad$sequences[-c(1L,2L)],
 #  # CC models have a single precision parameter across all clusters and time points.
 #  
 #  mod3 <- MEDseq_fit(mvad.seq, G=12, modtype="CC", weights=mvad$weights,
-#                     gating=~. - Grammar - Location, covars=mvad.cov)
+#                     gating= ~ . - Grammar - Location, covars=mvad.cov)
 
 ## ---- include=FALSE-----------------------------------------------------------
 load(file="mvad_mod1.rda")
@@ -73,10 +73,10 @@ print(opt$gating)
 knitr::include_graphics("MVAD_Clusters.png")
 
 ## ---- eval=FALSE--------------------------------------------------------------
-#  plot(opt, type="mean")
+#  plot(opt, type="central")
 
 ## ---- echo=FALSE--------------------------------------------------------------
-knitr::include_graphics("MVAD_Mean.png")
+knitr::include_graphics("MVAD_Central.png")
 
 ## ---- fig.height=8.5----------------------------------------------------------
 plot(opt, type="dbsvals")
@@ -86,29 +86,25 @@ MEDseq_meantime(opt, MAP=TRUE, norm=TRUE)
 
 ## -----------------------------------------------------------------------------
 data(biofam, package="MEDseq")
-biofam     <- list(covariates = biofam[2L:9L], 
-                   sequences = biofam[10L:25L] + 1L)
-biofam.cov <- biofam$covariates[,colSums(is.na(biofam$covariates)) == 0]
-biofam.seq <- seqdef(biofam$sequences,
-                     states = c("P", "L", "M", "L+M", 
-                                "C", "L+C", "L+M+C", "D"),
-                     labels = c("Parent", "Left", "Married", 
-                                "Left+Marr", "Child", "Left+Child", 
-                                "Left+Marr+Child", "Divorced"))
+biofam  <- list(covs = cbind(biofam[2L:9L], age = 2002 - biofam$birthyr), 
+                sequences = biofam[10L:25L] + 1L)
+bio.cov <- biofam$covs[,colSums(is.na(biofam$covs)) == 0]
+bio.seq <- seqdef(biofam$sequences,
+                  states = c("P", "L", "M", "L+M", 
+                             "C", "L+C", "L+M+C", "D"),
+                  labels = c("Parent", "Left", "Married", 
+                             "Left+Marr", "Child", "Left+Child", 
+                             "Left+Marr+Child", "Divorced"))
 
 ## ---- eval=FALSE--------------------------------------------------------------
 #  # The UUN model includes a noise component.
-#  # Otherwise, the model has a precision parameter for each time point in each cluster.
+#  # Otherwise, there is a precision parameter for each time point in each cluster.
 #  
-#  bio <- MEDseq_fit(biofam.seq, G=10, modtype="UUN", gating=~ birthyr,
-#                    covars=biofam.cov, noise.gate=FALSE)
+#  bio <- MEDseq_fit(bio.seq, G=10, modtype="UUN", gating= ~ age,
+#                    covars=bio.cov, noise.gate=FALSE)
 
-## ---- echo=FALSE--------------------------------------------------------------
-bio <- MEDseq_fit(biofam.seq, G=10, modtype="UUN", gating=~ birthyr, 
-                  covars=biofam.cov, noise.gate=FALSE, verbose=FALSE)
-
-## ---- echo=FALSE--------------------------------------------------------------
-bio$call <- bio$call[-length(bio$call)]
+## ---- include=FALSE-----------------------------------------------------------
+load(file="bio_mod.rda")
 
 ## -----------------------------------------------------------------------------
 print(bio)
@@ -126,8 +122,8 @@ plot(bio, type="precision", quant.scale=TRUE, seriated="clusters")
 plot(bio, type="aswvals")
 
 ## -----------------------------------------------------------------------------
-seqHtplot(biofam.seq)
+seqplot(bio.seq, type="Ht")
 
 ## ---- fig.height=8.5----------------------------------------------------------
-plot(bio, type="Ht")
+plot(bio, type="Ht", ylab=NA)
 

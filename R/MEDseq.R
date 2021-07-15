@@ -2,7 +2,7 @@
 #'
 #' Fits MEDseq models: mixtures of Exponential-Distance models with gating covariates and sampling weights. Typically used for clustering categorical/longitudinal life-course sequences.
 #' @section Usage:
-#' Fits _MEDseq_ models introduced by Murphy et al. (2019) <\href{https://arxiv.org/abs/1908.07963}{arXiv:1908.07963}>, i.e. fits mixtures of exponential-distance models for clustering longitudinal life-course sequence data via the EM/CEM algorithm. 
+#' Fits _MEDseq_ models introduced by Murphy et al. (2021) <\doi{10.1111/rssa.12712}>, i.e. fits mixtures of exponential-distance models for clustering longitudinal life-course sequence data via the EM/CEM algorithm. 
 #' 
 #' A family of parsimonious precision parameter constraints are accommodated. So too are sampling weights. Gating covariates can be supplied via formula interfaces.
 #' 
@@ -14,7 +14,7 @@
 #' 
 #' \code{\link{MEDseq_stderr}} is provided for computing the standard errors of the coefficients for the covariates in the gating network.
 #' 
-#' A dedicated plotting function \code{\link{plot.MEDseq}} exists for visualising various aspects of the results, using new methods as well as some existing methods from the \pkg{TraMineR} package.
+#' A dedicated plotting function \code{\link{plot.MEDseq}} exists for visualising various aspects of the results, using new methods as well as some existing methods adapted from the \pkg{TraMineR} package.
 #' 
 #' Finally, the package also contains two data sets: \code{\link{biofam}} and \code{\link{mvad}}.
 #' 
@@ -22,8 +22,8 @@
 #' \itemize{
 #' \item{Type: }{Package}
 #' \item{Package: }{MEDseq}
-#' \item{Version: }{1.2.1}
-#' \item{Date: }{2020-12-29 (this version), 2019-08-24 (original release)}
+#' \item{Version: }{1.3.0}
+#' \item{Date: }{2021-07-15 (this version), 2019-08-24 (original release)}
 #' \item{Licence: }{GPL (>=2)}
 #' }
 #'
@@ -35,7 +35,7 @@
 #' Keefe Murphy [aut, cre], Thomas Brendan Murphy [ctb], Raffaella Piccarreta [ctb], Isobel Claire Gormley [ctb]
 #'
 #' \strong{Maintainer}: Keefe Murphy - <\email{keefe.murphy@@mu.ie}>
-#' @references Murphy, K., Murphy, T. B., Piccarreta, R., and Gormley, I. C. (2019). Clustering longitudinal life-course sequences using mixtures of exponential-distance models. \emph{To appear}. <\href{https://arxiv.org/abs/1908.07963}{arXiv:1908.07963}>.
+#' @references Murphy, K., Murphy, T. B., Piccarreta, R., and Gormley, I. C. (2021). Clustering longitudinal life-course sequences using mixtures of exponential-distance models. \emph{Journal of the Royal Statistical Society: Series A (Statistics in Society)}, advance online publication, pp. 1-38. <\href{https://rss.onlinelibrary.wiley.com/doi/abs/10.1111/rssa.12712}{doi:10.1111/rssa.12712}>.
 #' @examples
 #' \dontshow{suppressMessages(require(TraMineR))}
 #' # Load the MVAD data
@@ -76,7 +76,7 @@
   version <- read.dcf(path, "Version")
   name    <- read.dcf(path, "Package")
   if(interactive()) {
-    packageStartupMessage(paste("\nMixtures of Exponential-Distance Models with Covariates\n___  ___ ___________                      version", version, "\n|  \\/  ||  ___|  _  \\\n| .  . || |__ | | | |___  ___  __ _\n| |\\/| ||  __|| | | / __|/ _ \\/ _` |\n| |  | || |___| |/ /\\__ \\  __/ (_| |\n\\_|  |_/\\____/|___/ |___/\\___|\\__, |\n                                 | |\n                                 |/\n"))                 
+    packageStartupMessage(paste("\nMixtures of Exponential-Distance Models with Covariates\n___  ___ ___________\t\t\t  version", version, "\n|  \\/  ||  ___|  _  \\\n| .  . || |__ | | | |___  ___  __ _\n| |\\/| ||  __|| | | / __|/ _ \\/ _` |\n| |  | || |___| |/ /\\__ \\  __/ (_| |\n\\_|  |_/\\____/|___/ |___/\\___|\\__, |\n                                 | |\n                                 |/\n"))                 
   } else   {
     packageStartupMessage("\nPackage ", sQuote(name), " version ", version, ".\n")
   }

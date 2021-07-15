@@ -46,14 +46,16 @@ Arguments to this function can be supplied to \code{\link{plot.MEDseq}} via the 
 \examples{
 \dontshow{suppressMessages(require(TraMineR))}
 \donttest{data(biofam)
-
 # mod <- MEDseq_fit(seqdef(biofam[10:25] + 1L), G=9:10)
 
 # Extract the MAP clustering of the best 9-cluster model according to the asw criterion
 # get_MEDseq_results(mod, what="MAP", G=9, criterion="asw")
 
 # Extract the DBS values of the best UUN model according to the dbs criterion
-# get_MEDseq_results(mod, what="DBS", modtype="UUN", criterion="dbs")}
+# get_MEDseq_results(mod, what="DBS", modtype="UUN", criterion="dbs")
+
+# Plot the DBS values of this same model, by passing get_MEDseq_results arguments through plot
+# plot(mod, type="dbsvals", modtype="UUN", criterion="dbs")}
 }
 \seealso{
 \code{\link{MEDseq_fit}}, \code{\link{plot.MEDseq}}

@@ -1,6 +1,53 @@
 __MEDseq: Mixtures of Exponential-Distance Models with Covariates__   
 ===================================================================
 
+## MEDseq v1.3.0 - (_7<sup>th</sup> release [minor update]: 2021-07-15_)
+### New Features & Improvements
+* `plot.MEDseq` gains a number of new arguments:  
+    * `soft` allows soft cluster membership probabilities to be used for the `"d"`, `"f"`, `"Ht"`, `"ms"`,  
+    & `"mt"` `type` plots (default: `soft=TRUE`) + the `"i"` & `"I"` plots (default: `soft=FALSE`), in a  
+    manner akin to  `WeightedCluster::fuzzyseqplot()`:  previously, all but the `"ms"` plot used the  
+    hard MAP partition and discarded the soft assignment information (i.e. `soft=FALSE`, implicitly).
+    * `sortv` allows overriding the `smeth` arg. to instead order observations in certain plots  
+    (where `seriated` is one of `"observations"` or `"both"`) by the `"dbs"` or `"asw"` values;  
+    additionally, and for consistency with `WeightedCluster::fuzzyseqplot()`,  
+    `sortv="membership"` is provided for `soft=TRUE` `type="I"` plots.
+    * `weighted` (`TRUE`, by default) allows control over whether the weights (if any) are used;  
+    relevant only for `"d"`, `"f"`, `"Ht"`, `"i"`, `"I"`, `"ms"`, & `"mt"` `type` plots.
+* Exported `MEDseq_clustnames` & `MEDseq_nameclusts` functions and added `SPS` arg. to `plot.MEDseq`,  
+  `MEDseq_meantime`, `MEDseq_stderr`, & various/more `print`/`summary` methods: now certain plots &  
+  outputs can be (or are by default) labelled with the central sequences in SPS format, as per the paper.
+* `seriated` options `"observations"` & `"both"` can now be used for `"i"` type plots,  
+  with related minor fixes for `"i"` & `"I"` type plots for weighted data with seriated observations.
+* Added `predict`, `fitted`, & `residuals` methods for `"MEDgating"` objects, i.e. `x$gating`.
+* `MEDseq_meantime` gains the arg. `wt.size` (defaults to `FALSE`).
+* Minor speed-ups to model-fitting for `modtype="CU"`.
+
+### Bug Fixes & Miscellaneous Edits
+* A warning message is now printed if the gating network's MLR ever fails to converge, prompting users to  
+  modify the `itmax` arg. to `MEDseq_control`: the 2<sup>nd</sup> element of this arg. governs the maximum number of  
+  MLR iterations --- consequently, its default has been modified from `100` to `1000`, which is liable to slow  
+  down internal calls to `nnet::multinom`, but generally reduces the required number of EM iterations. 
+* Changes to default colour palettes & plotting symbols for certain plot types:  
+  `Suggests:` package `viridisLite` now only invoked if available.
+* Minor fixes to returned `x$gating` object, especially for `equalPro` models  
+  with a noise component and weighted models _without_ any gating covariates at all.
+* Stronger checks to ensure `weights` arg. is explicitly supplied to `MEDseq_fit`  
+  in cases where the `"stslist"` object passed via `seqs` has the `"weights"` attribute.
+* Added error message to `MEDseq_fit` when the number of states exceeds 9,   
+  to better inform of this bug which will be rectified in future updates.
+* Fixed bug preventing inclusion of higher-order terms in `gating` formulas when there are duplicates.
+* Minor fixes to `get_MEDseq_results` and how its optional args. are internally handled by `plot.MEDseq`.
+* Stronger checks for variables in `gating` formula which are not found in `covars`.
+* `type="mean"` option renamed to `type="central"` in `plot.MEDseq`.
+* `type="ms"` plots now work properly when `seriated="clusters"` or `seriated="both"`.
+* Removed some superfluous warnings for all but the `"mt"` `TraMineR` type plots.
+* Fixed small bug in `MEDseq_meantime` when `MAP=FALSE`.
+* Further robustifications to handle empty components.
+* Minor fixes to `print.MEDseq` for models where DBS &/or ASW statistics weren't computed.
+* Minor vignette edits and documentation clarifications.
+* Updated citation info after online publication in _JRSSA_.
+
 ## MEDseq v1.2.1 - (_6<sup>th</sup> release [patch update]: 2020-12-29_)
 ### Bug Fixes & Miscellaneous Edits
 * The `"d"`, `"f"`, `"Ht"`, `"i"`, & `"I"` plot types now properly account for sampling weights.
@@ -77,7 +124,7 @@ __MEDseq: Mixtures of Exponential-Distance Models with Covariates__
 * Reformatted package startup message.
 
 ## MEDseq v1.1.0 - (_3<sup>rd</sup> release [minor update]: 2020-03-30_)
-### New Features, Improvements, and Bug Fixes
+### New Features, Improvements, & Bug Fixes
 * Significant efficiency gains when ignoring duplicates in the presence of weights:  
     * before, unique cases were defined as unique sequence/covariates/weight combinations,  
     * now, cases with different weights that are otherwise duplicates are treated as duplicates.
