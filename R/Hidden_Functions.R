@@ -17,6 +17,7 @@
 
 .char_to_num      <- function(x) {
     as.numeric(strsplit(x, "")[[1L]])
+   #utf8ToInt(x)
 }
 
 #' @importFrom matrixStats "rowMaxs"
@@ -282,6 +283,22 @@
     as.data.frame(lapply(x, function(y) { levels(y) <- Vseq; y} ))
 }
 
+.km_dist          <- function(mode, obj, frwts = NULL)     {
+  if(is.null(frwts)) return(sum(mode   != obj))
+  obj             <- as.character(obj)
+  mode            <- as.character(mode)
+  different       <- which(mode        != obj)
+  n_mode          <- 
+  n_obj           <- numeric(length(different))
+  for(i in seq_along(different))        {
+    frwt          <- frwts[[different[i]]]
+    names         <- names(frwt)
+    n_mode[i]     <- frwt[which(names  == mode[different[i]])]
+    n_obj[i]      <- frwt[which(names  ==  obj[different[i]])]
+  }
+    return(sum((n_mode + n_obj)/(n_mode * n_obj)))
+}
+
 .lab_width        <- function(x, cex = 0.67, offset = 1.5) {
     (offset + max(graphics::strwidth(x, units = "inches")) * graphics::par("mar")[1L]/graphics::par("mai")[1L]) * cex
 }
@@ -512,6 +529,7 @@
 
 .num_to_char      <- function(x) {
     paste(x, sep="", collapse="")
+   #intToUtf8(as.integer(x))
 }
 
 #' @importFrom matrixStats "colSums2" "rowSums2"
@@ -693,11 +711,18 @@
     tmp/sum(tmp)
 }
 
+.rand_mode  <- function(x) {
+  a         <- which.min(x)
+  a         <- if(length(a) > 1) sample(a, 1L) else a
+    return(a)
+}
+
 #' @importFrom matrixStats "rowSums2"
 .renorm_z         <- function(z) z/rowSums2(z)
 
 .replace_levels   <- function(seq, levels = NULL) {
   seq             <- as.numeric(strsplit(seq, "")[[1L]])
+ #seq             <- utf8ToInt(seq)
     if(is.null(levels)) factor(seq) else factor(seq, levels=seq_along(levels) - any(seq == 0), labels=as.character(levels))
 }
 
@@ -816,6 +841,15 @@
     z[classification  == groups[j], j] <- 1L
   }
     return(z)
+}
+
+.update_mode      <- function(num, cluster, data, weights = NULL)  {
+  diff            <- which(cluster == num)
+  clust           <- data[diff,, drop=FALSE]
+  apply(clust, 2L, function(cat)    {
+    cat           <- if(is.null(weights)) table(cat) else tapply(weights[diff], cat, FUN=sum)
+      return(names(cat)[which.max(cat)])
+  })
 }
 
 .version_above  <- function(pkg, versi) {
