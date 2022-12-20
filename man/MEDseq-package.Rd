@@ -32,8 +32,8 @@ Finally, the package also contains two data sets: \code{\link{biofam}} and \code
 \itemize{
 \item{Type: }{Package}
 \item{Package: }{MEDseq}
-\item{Version: }{1.3.3}
-\item{Date: }{2022-03-28 (this version), 2019-08-24 (original release)}
+\item{Version: }{1.4.0}
+\item{Date: }{2022-12-20 (this version), 2019-08-24 (original release)}
 \item{Licence: }{GPL (>=2)}
 }
 }
@@ -45,7 +45,6 @@ Further details and examples are given in the associated vignette document:\cr
 }
 
 \examples{
-\dontshow{suppressMessages(require(TraMineR))}
 # Load the MVAD data
 data(mvad)
 mvad$Location <- factor(apply(mvad[,5:9], 1L, function(x) 

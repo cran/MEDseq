@@ -1,16 +1,37 @@
 __MEDseq: Mixtures of Exponential-Distance Models with Covariates__   
 ===================================================================
 
+## MEDseq v1.4.0 - (_11<sup>th</sup> release [minor update]: 2022-12-20_)
+### New Features & Improvements
+* Function `seqdef` added as an exact copy of `TraMineR::seqdef`, to enable experienced  
+  users of `MEDseq` & `TraMineR` to use the former without needing to explicitly load the latter.
+* `MEDseq_clustnames` gains the arg. `weighted=FALSE` for use when `size=TRUE`:  
+  this is now respected by the `weighted` arg. to `plot.MEDseq` where relevant.
+* New function `dist_freqwH` added for calculating pairwise dissimilarity matrix associated with  
+  `wKModes(..., freq.weighted=TRUE)` for subsequent use (e.g. silhouettes).
+* The `plot.MEDseq` function's `type` arg. gains the option `"dH"`,  
+  provided version `2.2-4` or later of the `TraMineR` package is installed.
+* `plot.MEDseq` also gains the `"similarity"` option for its `type` argument.
+* New function `MEDseq_AvePP` added.
+
+### Bug Fixes & Miscellaneous Edits
+* `wKModes` now also returns `x$tot.withindiff` (i.e. `sum(x$withindiff)`).
+* Minor speed-ups to `wKModes` when `freq.weighted=TRUE`.
+* Minor cosmetic changes to `type="dbsvals"` & `type="aswvals"` in `plot.MEDseq`.
+* Minor speed-ups to `plot.MEDseq` related to its `seriated` arg. in `G=1` settings.
+* Fixed rare bugs in tie-breaking for modal sequence estimate in `MEDseq_fit` & `wKModes`.
+* Fixed documentation typos.
+
 ## MEDseq v1.3.3 - (_10<sup>th</sup> release [patch update]: 2022-03-28_)
 ### Improvements, Bug Fixes & Miscellaneous Edits
 * Major speed-ups to E-steps for all model types when `G>1`.
 * Minor speed-ups to distance calculations for all model types when `G>1`.
 * `MEDseq_meantime` gains the `map.size` arg. and a related `print` method.
 * Added `summary` (and related `print`) methods for `MEDCriterion` objects.
-* New function `MoE_entropy` added.
+* New function `MEDseq_entropy` added.
 * Fixed mismatched plotting symbols for models with noise in model-selection criteria plot legends.
 * Minor fix to handle (rare) empty components.
-* Minor edits for compatibility w/ latest TraMineR release, w.r.t. `"mt"` and `"ms"` plots.
+* Minor edits for compatibility w/ latest `TraMineR` release, w.r.t. `"mt"` and `"ms"` plots.
 
 ## MEDseq v1.3.2 - (_9<sup>th</sup> release [patch update]: 2021-12-19_)
 ### Bug Fixes & Miscellaneous Edits

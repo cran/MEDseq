@@ -8,6 +8,7 @@
 MEDseq_clustnames(x,
                   cluster = TRUE,
                   size = FALSE,
+                  weighted = FALSE,
                   ...)
 
 MEDseq_nameclusts(names)
@@ -18,6 +19,8 @@ MEDseq_nameclusts(names)
 \item{cluster}{A logical indicating whether names should be prepended with the text "\code{Cluster g: }", where \code{g} is the cluster number. Defaults to \code{TRUE}.}
 
 \item{size}{A logical indicating whether the (typically 'soft') size of each cluster is appended to the label of each group, expressed as a percentage of the total number of observations. Defaults to \code{FALSE}.}
+
+\item{weighted}{A logical indicating whether the sampling weights (if any) are used when appending the \code{size} of each cluster to the labels. Defaults to \code{FALSE}.}
 
 \item{...}{Catches unused arguments.}
 
@@ -35,10 +38,9 @@ These functions extract names for clusters according to the SPS representation o
 Unlike the \code{\link[WeightedCluster]{seqclustname}} function from the \pkg{WeightedCluster} package which inspired these functions, \code{MEDseq_clustnames} only returns the names themselves, not the \code{factor} variable indicating cluster membership with labels given by those names. Thus, \code{MEDseq_nameclusts} is provided as a convenience function for precisely this purpose (see \code{Examples}).
 }
 \note{
-The main \code{MEDseq_clustnames} function is used internally by \code{\link{plot.MEDseq}}, \code{\link{MEDseq_meantime}}, \code{\link{MEDseq_stderr}}, and also other \code{print} and \code{summary} methods, where its invocation can typically controlled via a \code{SPS} logical argument. However, the optional arguments \code{cluster} and \code{size} can only be passed through \code{\link{plot.MEDseq}}; elsewhere \code{cluster=TRUE} and \code{size=FALSE} are always assumed.
+The main \code{MEDseq_clustnames} function is used internally by \code{\link{plot.MEDseq}}, \code{\link{MEDseq_meantime}}, \code{\link{MEDseq_stderr}}, and also other \code{print} and \code{summary} methods, where its invocation can typically controlled via a \code{SPS} logical argument. However, the optional arguments \code{cluster}, \code{size}, and \code{weighted} can only be passed through \code{\link{plot.MEDseq}}; elsewhere \code{cluster=TRUE}, \code{size=FALSE}, and \code{weighted=FALSE} are always assumed.
 }
 \examples{
-\dontshow{suppressMessages(require(TraMineR))}
 # Load the MVAD data
 data(mvad)
 mvad$Location <- factor(apply(mvad[,5:9], 1L, function(x) 
@@ -66,9 +68,9 @@ names  <- MEDseq_clustnames(mod, cluster=FALSE, size=TRUE)
 group  <- MEDseq_nameclusts(names)
 
 # Use the output in plots
-seqplot(mvad.seq, type="d", group=group)
+plot(mod, type="d", soft=FALSE, weighted=FALSE, cluster=FALSE, size=TRUE, border=TRUE)
 # same as:
-# plot(mod, type="d", soft=FALSE, weighted=FALSE, cluster=FALSE, size=TRUE, border=TRUE)
+# seqplot(mvad.seq, type="d", group=group)
 
 # Indeed, this function is invoked by default for certain plot types
 plot(mod, type="d", soft=TRUE, weighted=TRUE)

@@ -29,7 +29,6 @@
 #'     clusters = NULL,
 #'     ...)
 #' @examples
-#' \dontshow{suppressMessages(require(TraMineR))}
 #' # Generate a toy z matrix
 #' z <- abs(matrix(rnorm(50), ncol=2))
 #' z <- z/rowSums(z)
@@ -82,7 +81,7 @@ dbs               <- function(z, ztol = 1E-100, weights = NULL, summ = c("mean",
     indX          <- .misclass(clusters, ordered[1L,])$misclassified
     ind           <- setdiff(seq_len(nrow(z)), indX)
     l2            <-
-    zz            <- rep(0L, nrow(z))
+    zz            <- integer(nrow(z))
     l2[indX]      <- log(diag(z[indX,ordered[1L,indX]]))
     zz[indX]      <- log(diag(z[indX,clusters]))       - l2[indX]
     l2[ind]       <- log(diag(z[ind,ordered[2L,ind]]))
@@ -132,7 +131,6 @@ dbs               <- function(z, ztol = 1E-100, weights = NULL, summ = c("mean",
 #'                    noise = TRUE, 
 #'                    ...)
 #' @examples
-#' \dontshow{suppressMessages(require(TraMineR))}
 #' \donttest{data(biofam)
 #' # mod <- MEDseq_fit(seqdef(biofam[10:25] + 1L), G=9:10)
 #' 
@@ -311,7 +309,6 @@ get_MEDseq_results.MEDseq     <- function(x, what = c("z", "MAP", "DBS", "ASW"),
 #'                pick = 10L,
 #'                optimal.only = FALSE)
 #' @examples
-#' \dontshow{suppressMessages(require(TraMineR))}
 #' data(biofam)
 #' seqs <- seqdef(biofam[10:25] + 1L,
 #'                states = c("P", "L", "M", "L+M", "C", 
@@ -548,9 +545,9 @@ MEDseq_compare    <- function(..., criterion = c("bic", "icl", "aic", "dbs", "as
 #' @param criterion When either \code{G} or \code{modtype} is a vector, \code{criterion} governs how the 'best' model is determined when gathering output. Defaults to \code{"bic"}. Note that all criteria will be returned in any case, if possible.
 #' @param tau0 Prior mixing proportion for the noise component. If supplied, a noise component will be added to the model in the estimation, with \code{tau0} giving the prior probability of belonging to the noise component for \emph{all} observations. Typically supplied as a scalar in the interval (0, 1), e.g. \code{0.1}. Can be supplied as a vector when gating covariates are present and \code{noise.gate} is \code{TRUE}.
 #' @param noise.gate A logical indicating whether gating network covariates influence the mixing proportion for the noise component, if any. Defaults to \code{TRUE}, but leads to greater parsimony if \code{FALSE}. Only relevant in the presence of a noise component (i.e. the \code{"CCN"}, \code{"UCN"}, \code{"CUN"}, and \code{"UUN"} models); only affects estimation in the presence of gating covariates.
-#' @param random A logical governing how ties for estimated central sequence positions are handled. When \code{TRUE} (the default), such ties are broken at random. When \code{FALSE} (the implied default prior to version 1.2.0 of this package), the first candidate state is always chosen. This argument affects all \code{opti} options. If \code{verbose} is \code{TRUE} and there are tie-breaking operations performed, a warning message is printed once per model, regardless of the number of such operations. 
+#' @param random A logical governing how ties for estimated central sequence positions are handled. When \code{TRUE} (the default), such ties are broken at random. When \code{FALSE} (the implied default prior to version \code{1.2.0} of this package), the first candidate state is always chosen. This argument affects all \code{opti} options. If \code{verbose} is \code{TRUE} and there are tie-breaking operations performed, a warning message is printed once per model, regardless of the number of such operations. 
 #' 
-#' Note that this argument is \emph{also} passed to \code{\link{wKModes}} if \code{init.z} is \code{"kmodes"} or \code{"kmodes2"} and that, in certain rare cases when the \code{"CEM"} \code{algo} is invoked when \code{equalPro} is \code{TRUE} and the precision parameter(s) are somehow contrained across clusters, this argument also governs ties for cluster assignments within \code{MEDseq_fit} as well.
+#' Note that this argument is \emph{also} passed to \code{\link{wKModes}} if \code{init.z} is \code{"kmodes"} or \code{"kmodes2"} and that, in certain rare cases when the \code{"CEM"} \code{algo} is invoked when \code{equalPro} is \code{TRUE} and the precision parameter(s) are somehow constrained across clusters, this argument also governs ties for cluster assignments within \code{MEDseq_fit} as well.
 #' @param do.cv A logical indicating whether cross-validated log-likelihood scores should also be computed (see \code{nfolds}). Defaults to \code{FALSE} due to significant computational burden incurred.
 #' @param do.nec A logical indicating whether the normalised entropy criterion (NEC) should also be computed (for models with more than one component). Defaults to \code{FALSE}. When \code{TRUE}, models with \code{G=1} are fitted always.
 #' @param nfolds The number of folds to use when \code{isTRUE{do.cv}}.
@@ -605,7 +602,6 @@ MEDseq_compare    <- function(..., criterion = c("bic", "icl", "aic", "dbs", "as
 #'                verbose = TRUE, 
 #'                ...)
 #' @examples
-#' \dontshow{suppressMessages(require(TraMineR))}
 #' # The CC MEDseq model is almost equivalent to k-medoids when the
 #' # CEM algorithm is employed, mixing proportions are constrained,
 #' # and the central sequences are restricted to the observed sequences
@@ -788,7 +784,6 @@ MEDseq_control    <- function(algo = c("EM", "CEM", "cemEM"), init.z = c("kmedoi
 #'            covars = NULL, 
 #'            ...)
 #' @examples
-#' \dontshow{suppressMessages(require(TraMineR))}
 #' # Load the MVAD data
 #' data(mvad)
 #' mvad$Location <- factor(apply(mvad[,5:9], 1L, function(x) 
@@ -1006,7 +1001,7 @@ MEDseq_fit        <- function(seqs, G = 1L:9L, modtype = c("CC", "UC", "CU", "UU
     if(ctrl$do.wts       <- (length(unique(weights)) < N)) {
       dist.mat2   <- dist.mat
       HAM.mat2    <- HAM.mat[uni.ind,uni.ind]
-      w2          <- rep(0L, N)
+      w2          <- integer(N)
       w2[uni.ind] <- weights
       dist.mat    <- stats::as.dist(as.matrix(dist.mat)[uni.ind,uni.ind])
       seqs        <- seqs[uni.ind,,   drop=FALSE]
@@ -1345,7 +1340,7 @@ MEDseq_fit        <- function(seqs, G = 1L:9L, modtype = c("CC", "UC", "CU", "UU
         CVll      <- -N * P * log(V)
       } else if(cvsel.X)    {
         ctrl$warn <- FALSE
-        lCV       <- vector("numeric", nfolds)
+        lCV       <- numeric(nfolds)
         zCV       <- z[cv.ind,,    drop=FALSE]
         for(i in foldseq)   {
           testX   <- which(cv.folds == i)
@@ -1507,7 +1502,7 @@ MEDseq_fit        <- function(seqs, G = 1L:9L, modtype = c("CC", "UC", "CU", "UU
   CRITs           <- switch(EXPR=criterion, bic=BICs, icl=ICLs, aic=AICs, dbs=DBSs, asw=ASWs, cv=CV.x, nec=NECs)
   best.ind        <- which(CRITs == switch(EXPR=criterion, nec=-crit.gx, crit.gx), arr.ind=TRUE)
   if(nrow(best.ind) > 1)    {    warning(paste0("Ties for the optimal model exist according to the '", toupper(criterion), "' criterion: choosing the most parsimonious model\n"), call.=FALSE, immediate.=TRUE)
-    best.ind      <- which(DF.x  == min(DF.x[best.ind]), arr.ind=TRUE)
+    best.ind      <- which(DF.x  == min(DF.x[best.ind], na.rm=TRUE), arr.ind=TRUE)
     best.ind      <- best.ind[which.min(best.ind[,1L]),]
   }
   best.G          <- best.ind[1L]
@@ -1742,7 +1737,7 @@ MEDseq_fit        <- function(seqs, G = 1L:9L, modtype = c("CC", "UC", "CU", "UU
   results         <- if(do.nec && G > 1) c(results, list(nec = x.nec)) else results
   results         <- c(results, list(
                           ZS      = stats::setNames(ZS, rG),
-                          uncert  = if(G > 1) 1 - rowMaxs(x.z) else vector("integer", N2),
+                          uncert  = if(G > 1) 1 - rowMaxs(x.z) else integer(N2),
                           covars  = covars))
   attr(results, "Algo")         <- algo
   attr(results, "ASW")          <- do.asw
@@ -1795,6 +1790,7 @@ MEDseq_fit        <- function(seqs, G = 1L:9L, modtype = c("CC", "UC", "CU", "UU
 #' \item{\code{"LOGLIK"}}{Plots all maximal log-likelihood values in a fitted \code{MEDseq} object.}
 #' \item{\code{"dbsvals"}}{Silhouette plot using observations-specific DBS values for the optimal model (coloured by cluster). See \code{seriated}.}
 #' \item{\code{"aswvals"}}{Silhouette plot using observations-specific ASW values for the optimal model (coloured by cluster). See \code{seriated}.}
+#' \item{\code{"similarity"}}{Produces a heatmap of the similarity matrix constructed from the \code{x$z} matrix at convergence, with observations reordered via \code{seriated} for visual clarity. The (potentially seriated) similarity matrix can also be invisibly returned.}
 #' \item{\code{"uncert.bar"}}{Plot the observation-specific clustering uncertainties, if any, in the form of a bar plot.}
 #' \item{\code{"uncert.profile"}}{Plot the observation-specific clustering uncertainties, if any, in the form of a profile plot.}
 #' \item{\code{"loglik"}}{Plot the log-likelihood at every iteration of the EM/CEM algorithm used to fit the model.}
@@ -1803,7 +1799,8 @@ MEDseq_fit        <- function(seqs, G = 1L:9L, modtype = c("CC", "UC", "CU", "UU
 #' 
 #' Note also that all of the plot types below can be made to either work with the hard MAP partition, or to use the soft cluster membership probabilities, via the \code{soft} argument below. The soft information is used by default for all but the \code{"i"} and \code{"I"} plot types, which (by default) discard this information to instead use the MAP partition: see the \code{soft} argument below for modifying this default behaviour for all of the following plot types.
 #' \describe{
-#' \item{\code{"d"}}{State distribution plots (by cluster).}
+#' \item{\code{"d"}}{State distribution plots (chronograms, by cluster).}
+#' \item{\code{"dH"}}{State distribution plots (chronograms, by cluster) with overlaid entropy line as per \code{type="Ht"}. Note that this option is only available if version \code{2.2-4} or later of \pkg{TraMineR} is installed.}
 #' \item{\code{"f"}}{Sequence frequency plots (by cluster).}
 #' \item{\code{"Ht"}}{Transversal entropy plots (by cluster).}
 #' \item{\code{"i"}}{Selected sequence index plots (by cluster). By default, bar widths for each observation will be proportional to their weight (if any). However, this can be overruled by specifying \code{weighted=FALSE}.}
@@ -1813,41 +1810,43 @@ MEDseq_fit        <- function(seqs, G = 1L:9L, modtype = c("CC", "UC", "CU", "UU
 #' }
 #' @param seriated Switch indicating whether seriation should be used to improve the visualisation by re-ordering the \code{"observations"} within clusters (the default), the \code{"clusters"}, \code{"both"}, or \code{"none"}. See \code{\link[seriation]{seriate}} and the \code{smeth} and \code{sortv} arguments below. 
 #' 
-#' The \code{"clusters"} option (and the cluster-related part of \code{"both"}) is only invoked when \code{type} is one of \code{"clusters"}, \code{"central"}, \code{"precision"}, \code{"gating"}, \code{"dbsvals"}, \code{"aswvals"}, \code{"d"}, \code{"f"}, \code{"Ht"}, \code{"i"}, \code{"I"}, \code{"ms"}, or \code{"mt"}. 
+#' The \code{"clusters"} option (and the cluster-related part of \code{"both"}) is only invoked when \code{type} is one of \code{"clusters"}, \code{"central"}, \code{"precision"}, \code{"gating"}, \code{"dbsvals"}, \code{"aswvals"}, \code{"similarity"}, \code{"d"}, \code{"dH"}, \code{"f"}, \code{"Ht"}, \code{"i"}, \code{"I"}, \code{"ms"}, or \code{"mt"}. 
 #' 
-#' Additionally, the \code{"observations"} option (and the observation-related part of \code{"both"}) is only invoked when \code{type} is one of \code{"clusters"}, \code{"gating"}, \code{"i"} or \code{"I"}, which are also the only options for which \code{"both"} is relevant.
-#' @param soft This argument is a single logical indicator which is only relevant for the \code{"d"}, \code{"f"}, \code{"Ht"}, \code{"i"}, \code{"I"}, \code{"ms"}, and \code{"mt"} plot types borrowed from \pkg{TraMineR}. When \code{soft=TRUE} (the default for all but the \code{"i"} and \code{"I"} \code{type} plots) the soft cluster membership probabilities are used in a manner akin to \code{\link[WeightedCluster]{fuzzyseqplot}}. Otherwise, when \code{FALSE} (the default for \code{"i"} and \code{"I"} \code{type} plots), the soft information is discarded and the hard MAP partition is used instead. 
+#' Additionally, the \code{"observations"} option (and the observation-related part of \code{"both"}) is only invoked when \code{type} is one of \code{"clusters"}, \code{"gating"}, \code{"similarity"}, \code{"i"} or \code{"I"}, which are also the only options for which \code{"both"} is relevant.
+#' @param soft This argument is a single logical indicator which is only relevant for the \code{"d"}, \code{"dH"}, \code{"f"}, \code{"Ht"}, \code{"i"}, \code{"I"}, \code{"ms"}, and \code{"mt"} plot types borrowed from \pkg{TraMineR}. When \code{soft=TRUE} (the default for all but the \code{"i"} and \code{"I"} \code{type} plots) the soft cluster membership probabilities are used in a manner akin to \code{\link[WeightedCluster]{fuzzyseqplot}}. Otherwise, when \code{FALSE} (the default for \code{"i"} and \code{"I"} \code{type} plots), the soft information is discarded and the hard MAP partition is used instead. 
 #' 
 #' Note that soft cluster membership probabilities will not be available if \code{x$G=1} or the model was fitted using the \code{algo="CEM"} option to \code{\link{MEDseq_control}}. Plots may still be weighted when \code{soft} is \code{FALSE}, according to the observation-specific sampling weights, when \code{weighted=TRUE}. Note also that \code{type="Ht"} can be used in conjunction with \code{soft=TRUE}, unlike \code{\link[WeightedCluster]{fuzzyseqplot}} for which \code{type="Ht"} is not permissible. Finally, be advised that plotting may be time-consuming when \code{soft=TRUE} for \code{"i"} and \code{"I"} \code{type} plots.
-#' @param weighted This argument is a single logical indicator which is only relevant for the \code{"d"}, \code{"f"}, \code{"Ht"}, \code{"i"}, \code{"I"}, \code{"ms"}, and \code{"mt"} plot types borrowed from \pkg{TraMineR}. When \code{TRUE} (the default), the weights (if any) are accounted for in such plots. Note that when \code{soft} is \code{TRUE}, plots will still be weighted according to the soft cluster membership probabilities; thus \code{weighted=TRUE} and \code{soft=TRUE} allows both these and the observation-specific weights to be used simultaneously (the default behaviour for both arguments).
-#' @param SPS A logical indicating whether clusters should be labelled according to the state-permanence-sequence representation of their central sequence. See \code{\link{MEDseq_clustnames}} and \code{\link[TraMineR]{seqformat}}. Defaults to \code{TRUE} for the plot types adapted from \pkg{TraMineR}, i.e. the \code{"d"}, \code{"f"}, \code{"Ht"}, \code{"i"}, \code{"I"}, \code{"ms"}, and \code{"mt"} \code{type} plots. The \code{SPS} argument is also relevant for the following \code{type} plots: \code{"clusters"}, \code{"central"}, and \code{"precision"}, though \code{SPS} defaults to \code{FALSE} in those instances.
+#' @param weighted This argument is a single logical indicator which is only relevant for the \code{"clusters"}, \code{"central"}, and \code{"precision"} plot types, as well as the \code{"d"}, \code{"dH"}, \code{"f"}, \code{"Ht"}, \code{"i"}, \code{"I"}, \code{"ms"}, and \code{"mt"} plot types borrowed from \pkg{TraMineR}. For plots borrowed from \pkg{TraMineR}, when \code{TRUE} (the default), the weights (if any) are accounted for in such plots. Note that when \code{soft} is \code{TRUE}, plots will still be weighted according to the soft cluster membership probabilities; thus \code{weighted=TRUE} and \code{soft=TRUE} allows both these and the observation-specific weights to be used simultaneously (the default behaviour for both arguments). 
+#' 
+#' Additionally, for these plots and the \code{"clusters"}, \code{"central"}, and \code{"precision"} types, \code{weighted} is passed through to \code{\link{MEDseq_clustnames}} in the rare case where \code{SPS=TRUE} (see below) and the optional \code{\link{MEDseq_clustnames}} argument \code{size=TRUE} is invoked (again, see below).
+#' @param SPS A logical indicating whether clusters should be labelled according to the state-permanence-sequence representation of their central sequence. See \code{\link{MEDseq_clustnames}} and \code{\link[TraMineR]{seqformat}}. Defaults to \code{TRUE} for the plot types adapted from \pkg{TraMineR}, i.e. the \code{"d"}, \code{"dH"}, \code{"f"}, \code{"Ht"}, \code{"i"}, \code{"I"}, \code{"ms"}, and \code{"mt"} \code{type} plots. The \code{SPS} argument is also relevant for the following \code{type} plots: \code{"clusters"}, \code{"central"}, and \code{"precision"}, though \code{SPS} defaults to \code{FALSE} in those instances. Note that if \code{SPS=TRUE} for any relevant plot type, the \code{weighted} argument above is relevant if the optional \code{\link{MEDseq_clustnames}} argument \code{size=TRUE} is invoked (see below).
 #' @param smeth A character string with the name of the seriation method to be used. Defaults to \code{"TSP"}. See \code{\link[seriation]{seriate}} and \code{seriation::list_seriation_methods("dist")} for further details and the available methods. Only relevant when \code{seriated != "none"}. When \code{seriated == "obs"} or \code{seriated == "both"}, the ordering of observations can be governed by \code{smeth} or \emph{instead} governed by the \code{sortv} argument below.
-#' @param sortv A sorting method governing the ordering of observations for \code{"clusters"}, \code{"gating"}, \code{"i"}, or \code{"I"} \code{type} plots. Potential options include \code{"dbs"} and \code{"asw"} for sorting observations by their DBS or ASW values (if available). Only relevant if \code{seriated} is one of \code{"observations"} or \code{"both"}. Note that the \code{sortv} argument overrides the setting in \code{smeth} as it pertains to the ordering of observations if \code{sortv} is supplied; otherwise \code{sortv} is \code{NULL} and the \code{smeth} is invoked.
+#' @param sortv A sorting method governing the ordering of observations for \code{"clusters"}, \code{"gating"}, \code{"similarity"}, \code{"i"}, or \code{"I"} \code{type} plots. Potential options include \code{"dbs"} and \code{"asw"} for sorting observations by their DBS or ASW values (if available). Only relevant if \code{seriated} is one of \code{"observations"} or \code{"both"}. Note that the \code{sortv} argument overrides the setting in \code{smeth} as it pertains to the ordering of observations if \code{sortv} is supplied; otherwise \code{sortv} is \code{NULL} and the \code{smeth} is invoked.
 #' 
 #' Additionally, when (and only when) \code{soft=TRUE} and \code{type="I"}, the additional option \code{sortv="membership"} is provided in accordance with \code{\link[WeightedCluster]{fuzzyseqplot}}, on which such plots are based.
-#' @param subset An optional numeric vector giving the indices of the clusters to be plotted. For models with a noise component, values in \code{0:x$G} are admissible, where \code{0} denotes the noise component, otherwise only values in \code{1:x$G}. Only relevant for the \pkg{TraMineR}-\code{type} plots, i.e. \code{"d"}, \code{"f"}, \code{"Ht"}, \code{"i"}, \code{"I"}, \code{"ms"}, and \code{"mt"} \code{type} plots. Note however, that noise components are never plotted for \code{type="ms"} plots, so \code{subset} values of \code{0} will be ignored in this instance.
+#' @param subset An optional numeric vector giving the indices of the clusters to be plotted. For models with a noise component, values in \code{0:x$G} are admissible, where \code{0} denotes the noise component, otherwise only values in \code{1:x$G}. Only relevant for the \pkg{TraMineR}-\code{type} plots, i.e. \code{"d"}, \code{"dH"}, \code{"f"}, \code{"Ht"}, \code{"i"}, \code{"I"}, \code{"ms"}, and \code{"mt"} \code{type} plots. Note however, that noise components are never plotted for \code{type="ms"} plots, so \code{subset} values of \code{0} will be ignored in this instance.
 #' @param quant.scale Logical indicating whether precision parameter heatmaps should use quantiles to determine non-linear colour break-points when \code{type="precision"}. This ensures each colour represents an equal proportion of the data. The behaviour of \code{0} or \code{Inf} values remains unchanged; only strictly-positive finite entries are affected. Heavily imbalanced values are more likely for the \code{"UU"} and \code{"UUN"} model types, thus \code{quant.scale} defaults to \code{TRUE} in those instances and \code{FALSE} otherwise. Note that \code{quant.scale} is \emph{always} \code{FALSE} for the \code{"CC"} and \code{"CCN"} model types.
-#' @param ... Catches unused arguments, and allows arguments to \code{\link{get_MEDseq_results}} to be passed when \code{type} is one of \code{"clusters"}, \code{"dbsvals"}, \code{"aswvals"}, \code{"uncert.bar"}, \code{"uncert.profile"}, \code{"d"}, \code{"f"}, \code{"Ht"}, \code{"i"}, \code{"I"}, \code{"ms"}, or \code{"mt"}, as well as the \code{x.axis} argument when \code{type="gating"}. Also allows select additional arguments to the \code{TraMineR} function \code{\link[TraMineR]{seqplot}} to be used for the relevant plot types (e.g. \code{border} and/or \code{ylab}, \code{serr} where \code{type="mt"}, and \code{info} where \code{type="ms"}) and the \code{size} argument to \code{\link{MEDseq_clustnames}}, where relevant.
+#' @param ... Catches unused arguments, and allows arguments to \code{\link{get_MEDseq_results}} to be passed when \code{type} is one of \code{"clusters"}, \code{"dbsvals"}, \code{"aswvals"}, \code{"similarity"}, \code{"uncert.bar"}, \code{"uncert.profile"}, \code{"d"}, \code{"dH"}, \code{"f"}, \code{"Ht"}, \code{"i"}, \code{"I"}, \code{"ms"}, or \code{"mt"}, as well as the \code{x.axis} argument when \code{type="gating"}. Also allows select additional arguments to the \pkg{TraMineR} function \code{\link[TraMineR]{seqplot}} to be used for the relevant plot types (e.g. \code{border} and/or \code{ylab}, \code{serr} where \code{type="mt"}, and \code{info} where \code{type="ms"}) and the \code{size} argument to \code{\link{MEDseq_clustnames}}, where relevant.
 #'
 #' @return The visualisation according to \code{type} of the results of a fitted \code{MEDseq} model.
-#' @details The \code{type} options related to model selection criteria plot values for \emph{all} fitted models in the \code{"MEDseq"} object \code{x}. The remaining \code{type} options plot results for the optimal model, by default. However, arguments to \code{get_MEDseq_results} can be passed via the \code{...} construct to plot corresponding results for suboptimal models in \code{x} when \code{type} is one of \code{"clusters"}, \code{"d"}, \code{"f"}, \code{"Ht"}, \code{"i"}, \code{"I"}, \code{"ms"}, or \code{"mt"}. See the examples below.
-#' @note Every \code{type} of plot respects the sampling weights, if any. However, those related to \code{\link[TraMineR]{seqplot}} plots from \pkg{TraMineR} (\code{"d"}, \code{"f"}, \code{"Ht"}, \code{"i"}, \code{"I"}, \code{"ms"}, \code{"mt"}) do so only when \code{weighted=TRUE} (the default). 
+#' @details The \code{type} options related to model selection criteria plot values for \emph{all} fitted models in the \code{"MEDseq"} object \code{x}. The remaining \code{type} options plot results for the optimal model, by default. However, arguments to \code{get_MEDseq_results} can be passed via the \code{...} construct to plot corresponding results for suboptimal models in \code{x} when \code{type} is one of \code{"clusters"}, \code{"d"}, \code{"dH"}, \code{"f"}, \code{"Ht"}, \code{"i"}, \code{"I"}, \code{"ms"}, or \code{"mt"}. See the examples below.
+#' @note Every \code{type} of plot respects the sampling weights, if any. However, those related to \code{\link[TraMineR]{seqplot}} plots from \pkg{TraMineR} (\code{"d"}, \code{"dH"}, \code{"f"}, \code{"Ht"}, \code{"i"}, \code{"I"}, \code{"ms"}, \code{"mt"}) do so only when \code{weighted=TRUE} (the default). 
 #' 
 #' For these plot types borrowed from \pkg{TraMineR}, when \code{weighted=TRUE}, the y-axis labels (which can be suppressed using \code{ylab=NA}) always display cluster sizes which correspond to the output of \code{\link{MEDseq_meantime}(x, MAP=!soft, weighted=weighted, map.size=FALSE, wt.size=TRUE)}, where \code{wt.size=TRUE} is \strong{NOT} the default behaviour for \code{\link{MEDseq_meantime}}. 
 #' 
-#' Finally, the plot types borrowed from \pkg{TraMineR} may be too wide to display in the preview panel. The same may also be true when \code{type} is \code{"dbsvals"} or \code{"aswvals"}. 
+#' Please note that \code{type="dH"} will be unavailable if versions of \pkg{TraMineR} prior to \code{2.2-4} are in use. The colour of the entropy line(s) will be \code{"blue"} for \code{type="Ht"} and \code{"black"} for \code{type="dH"}. Finally, the plot types borrowed from \pkg{TraMineR} may be too wide to display in the preview panel. The same may also be true when \code{type} is \code{"dbsvals"} or \code{"aswvals"}. 
 #' @references Murphy, K., Murphy, T. B., Piccarreta, R., and Gormley, I. C. (2021). Clustering longitudinal life-course sequences using mixtures of exponential-distance models. \emph{Journal of the Royal Statistical Society: Series A (Statistics in Society)}, 184(4): 1414-1451. <\href{https://rss.onlinelibrary.wiley.com/doi/abs/10.1111/rssa.12712}{doi:10.1111/rssa.12712}>.
 #' 
-#' Studer, M. (2018). Divisive property-based and fuzzy clustering for sequence analysis. In G. Ritschard and M. Studer (Eds.), \emph{Sequence Analysis and Related Approaches: Innovative Methods and Applications}, pp. 223-239. Cham: Springer International Publishing.
+#' Studer, M. (2018). Divisive property-based and fuzzy clustering for sequence analysis. In G. Ritschard and M. Studer (Eds.), \emph{Sequence Analysis and Related Approaches: Innovative Methods and Applications}, pp. 223-239. Cham, Switzerland: Springer International Publishing.
 #' 
-#' Gabadinho, A., Ritschard, G., Mueller, N. S., and Studer, M. (2011). Analyzing and visualizing state sequences in R with TraMineR. \emph{Journal of Statistical Software}, 40(4): 1-37.
+#' Gabadinho, A., Ritschard, G., Mueller, N. S., and Studer, M. (2011). Analyzing and visualizing state sequences in R with \pkg{TraMineR}. \emph{Journal of Statistical Software}, 40(4): 1-37.
 #' @usage 
 #' \method{plot}{MEDseq}(x,
 #'      type = c("clusters", "central", "precision", "gating", 
 #'               "bic", "icl", "aic", "dbs", "asw", "cv", 
-#'               "nec", "LOGLIK", "dbsvals", "aswvals", 
+#'               "nec", "LOGLIK", "dbsvals", "aswvals", "similarity",
 #'               "uncert.bar", "uncert.profile", "loglik", 
-#'               "d", "f", "Ht", "i", "I", "ms", "mt"), 
+#'               "d", "dH", "f", "Ht", "i", "I", "ms", "mt"), 
 #'      seriated = c("observations", "both", "clusters", "none"), 
 #'      soft = NULL,
 #'      weighted = TRUE,
@@ -1867,7 +1866,6 @@ MEDseq_fit        <- function(seqs, G = 1L:9L, modtype = c("CC", "UC", "CU", "UU
 #' @seealso \code{\link{MEDseq_fit}}, \code{\link[TraMineR]{seqplot}}, \code{\link{dbs}}, \code{\link{get_MEDseq_results}}, \code{\link[seriation]{seriate}}, \code{\link[seriation]{list_seriation_methods}}, \code{\link[WeightedCluster]{fuzzyseqplot}}, \code{\link{MEDseq_meantime}}, \code{\link{MEDseq_clustnames}}, \code{\link[TraMineR]{seqformat}}
 #'
 #' @examples
-#' \dontshow{suppressMessages(require(TraMineR))}
 #' # Load the MVAD data
 #' data(mvad)
 #' mvad$Location <- factor(apply(mvad[,5:9], 1L, function(x) 
@@ -1914,6 +1912,9 @@ MEDseq_fit        <- function(seqs, G = 1L:9L, modtype = c("CC", "UC", "CU", "UU
 #' # Plot the observation-specific ASW values of the best CCN model (according to the asw criterion)
 #' # plot(mod1, "aswvals", modtype="CCN", criterion="asw")
 #' 
+#' # Plot the similarity matrix (as a heatmap) of the best G=9 model (according to the icl criterion)
+#' # plot(mod1, "similarity", G=9, criterion="icl")
+#' 
 #' # Fit a model with weights and gating covariates
 #' # mod2        <- MEDseq_fit(mvad.seq, G=10, modtype="UCN", weights=mvad$weights, 
 #' #                           gating=~ fmpr + gcse5eq + livboth, covars=mvad.cov)
@@ -1930,8 +1931,9 @@ MEDseq_fit        <- function(seqs, G = 1L:9L, modtype = c("CC", "UC", "CU", "UU
 #' 
 #' # Plot the  transversal entropies by cluster & then the state-distributions by cluster
 #' # Note that these plots may not display properly in the preview panel
-#' # plot(mod2, "Ht", ylab=NA)    # suppress the y-axis labels
-#' # plot(mod2, "d", border=TRUE) # add borders
+#' # plot(mod2, "Ht", ylab=NA)              # suppress the y-axis labels
+#' # plot(mod2, "d", border=TRUE)           # add borders
+#' # plot(mod2, "dH", ylab=NA, border=TRUE) # both simultaneously (needs TraMineR >=2.2-4)
 #' 
 #' # The plots above use the soft cluster membership probabilities
 #' # Discard this information and reproduce the per-cluster state-distributions plot
@@ -1944,7 +1946,7 @@ MEDseq_fit        <- function(seqs, G = 1L:9L, modtype = c("CC", "UC", "CU", "UU
 #' # Use type="I" and subset=0 to examine the noise component
 #' # plot(mod2, "I", subset=0, border=TRUE, weighted=FALSE, seriated="none")}
 plot.MEDseq       <- function(x, type = c("clusters", "central", "precision", "gating", "bic", "icl", "aic", "dbs", "asw", "cv", "nec", "LOGLIK", 
-                              "dbsvals", "aswvals", "uncert.bar", "uncert.profile", "loglik", "d", "f", "Ht", "i", "I", "ms", "mt"), 
+                              "dbsvals", "aswvals", "similarity", "uncert.bar", "uncert.profile", "loglik", "d", "dH", "f", "Ht", "i", "I", "ms", "mt"), 
                               seriated = c("observations", "both", "clusters", "none"), soft = NULL, weighted = TRUE, 
                               SPS = NULL, smeth = "TSP", sortv = NULL, subset = NULL, quant.scale = FALSE, ...) {
   x               <- if(inherits(x, "MEDseqCompare")) x$optimal else x
@@ -1955,10 +1957,17 @@ plot.MEDseq       <- function(x, type = c("clusters", "central", "precision", "g
      (length(seriated)   > 1  ||
       !is.character(seriated)))  stop("'seriated' must be a character vector of length 1", call.=FALSE)
   type            <- match.arg(type)
+  if(type == "dH" && 
+     !.version_above("TraMineR", 
+                     "2.2-4"))   stop("'type'=\"dH\" is only available if version 2.2-4 or later of the TraMineR package is installed", call.=FALSE)
   seriated        <- match.arg(seriated)
-  sericlus        <- is.element(seriated, c("both", "clusters"))     && is.element(type, c("clusters", "central", "precision", "gating", 
-                                                                                           "dbsvals", "aswvals", "d", "f", "Ht", "i", "I", "ms", "mt"))
-  seriobs         <- is.element(seriated, c("both", "observations")) && is.element(type, c("clusters", "gating", "i", "I"))
+  sericlus        <- is.element(seriated, c("both", "clusters"))     && is.element(type, c("clusters", "central", "precision", "gating", "similarity",
+                                                                                           "dbsvals", "aswvals", "d", "dH", "f", "Ht", "i", "I", "ms", "mt"))
+  seriobs         <- is.element(seriated, c("both", "observations")) && is.element(type, c("clusters", "gating", "similarity", "i", "I"))
+  seriated        <- switch(EXPR=seriated, 
+                            clusters=ifelse(sericlus, "clusters", "none"),
+                            observations=ifelse(seriobs, "observations", "none"),
+                            both=ifelse(sericlus && seriobs, "both", ifelse(sericlus, "clusters", ifelse(seriobs, "observations", "none"))))
   if(seriated     != "none")   {
     if(!missing(smeth)        &&
        (length(smeth)    > 1  ||
@@ -2006,15 +2015,16 @@ plot.MEDseq       <- function(x, type = c("clusters", "central", "precision", "g
   dots            <- list(...)
   dots            <- dots[unique(names(dots))]
   has.dot         <- length(names(dots)[names(dots) %in% setdiff(names(formals(get_MEDseq_results)), c("x", "what", "..."))]) > 0
-  if((has.MAP     <- length(dots) > 0 && any(names(dots)  == "MAP")))       {
+  if((has.MAP     <- length(dots) > 0 && any(names(dots)  == "MAP")))             {
     MAP           <- dots$MAP
     if(length(MAP)      != N  ||
        !is.numeric(MAP)       ||
        MAP        != floor(MAP)) stop(paste0("'MAP' must be an integer vector of length N=", N),  call.=FALSE)
   } else MAP      <- x$MAP
-  if(is.element(type, c("clusters", "d", "f", "Ht", "i", "I", "ms", "mt")) ||
+  if(is.element(type, c("clusters", "similarity", 
+                        "d", "dH", "f", "Ht", "i", "I", "ms", "mt"))   ||
     (isTRUE(sericlus) && 
-    (is.element(type, c("central", "precision", "dbsvals", "aswvals"))     ||
+    (is.element(type, c("central", "precision", "dbsvals", "aswvals")) ||
     (type == "gating" && attr(x, "Gating"))))) {
     if(!is.element(type, c("gating", "central", "precision"))) {
       if(has.MAP)  {
@@ -2025,6 +2035,16 @@ plot.MEDseq       <- function(x, type = c("clusters", "central", "precision", "g
         G         <- attr(MAP, "G")
         noise     <- attr(MAP, "Noise")
       }
+    }
+    if(type       == "similarity") {
+      z           <- if(has.dot) do.call(get_MEDseq_results, c(list(x=x, what="z"), dots[!(names(dots) %in% c("x", "what"))])) else x$z
+      G           <- ncol(z)
+      sim         <- if(G > 1) tcrossprod(z)      else matrix(1L, nrow=N, ncol=N)
+      dmat        <- if(G > 1) 1 - sim            else matrix(0L, nrow=N, ncol=N)
+    }
+    if(G == 1)     {
+      sericlus    <- FALSE  
+      seriated    <- switch(EXPR=seriated, clusters="none", both="observations", seriated)
     }
     if(isTRUE(sericlus)       &&
        !all((unip <- 
@@ -2048,13 +2068,11 @@ plot.MEDseq       <- function(x, type = c("clusters", "central", "precision", "g
   Gseq            <- seq_len(G)
   perm            <- if(isTRUE(sericlus))  perm                         else Gseq
   perm            <- if(length(perm) != G) c(perm, setdiff(Gseq, perm)) else perm
-  perm            <- if(isTRUE(noise))     replace(perm, G, ifelse(is.element(type, c("clusters", "gating", "i", "I")), 0L, "Noise"))  else perm
-
-  if(type == "clusters" || 
-     type == "i"        ||
-     type == "I"        ||
+  perm            <- if(isTRUE(noise))     replace(perm, G, ifelse(is.element(type, c("clusters", "gating", "similarity", "i", "I")), 0L, "Noise"))  else perm
+  
+  if(is.element(type, c("clusters", "similarity", "i", "I")) ||
     (type == "gating"   && 
-    attr(x,  "Gating"))) {
+     attr(x, "Gating"))) {
     if((vsort     <- isTRUE(seriobs)    && 
        !is.null(sortv)  &&
        !identical(sortv, "membership"))) {
@@ -2105,7 +2123,7 @@ plot.MEDseq       <- function(x, type = c("clusters", "central", "precision", "g
     graphics::layout(rbind(1, 2), heights=c(0.85, 0.15), widths=1)
     OrderedStates <- data.matrix(.fac_to_num(dat))[glo.order,]
     if(isTRUE(SPS)) {
-      tmp_labs    <- MEDseq_clustnames(x, cluster=FALSE, ...)[replace(perm, perm == 0, G)]
+      tmp_labs    <- MEDseq_clustnames(x, cluster=FALSE, weighted=weighted, ...)[replace(perm, perm == 0, G)]
       graphics::par(mar=c(5.1, 4.1, 4.1, .lab_width(tmp_labs)))
     }
     if(any(num.cl == 0))         warning("Model has one or more empty components\n", call.=FALSE, immediate.=TRUE)
@@ -2142,7 +2160,7 @@ plot.MEDseq       <- function(x, type = c("clusters", "central", "precision", "g
     attr(dat, "names")  <- attr(x$data, "names")
     graphics::layout(rbind(1, 2), heights=c(0.85, 0.15), widths=1)
     if(isTRUE(SPS)) {
-      tmp_labs    <- MEDseq_clustnames(x, cluster=FALSE, ...)[as.numeric(replace(perm, G, G))]
+      tmp_labs    <- MEDseq_clustnames(x, cluster=FALSE, weighted=weighted, ...)[as.numeric(replace(perm, G, G))]
       graphics::par(mar=c(5.1, 4.1, 4.1, .lab_width(tmp_labs)))
     }
     seqplot(dat, type="I", with.legend=FALSE, main="Central Sequences Plot", border=NA, missing.color=graphics::par()$bg, 
@@ -2165,7 +2183,7 @@ plot.MEDseq       <- function(x, type = c("clusters", "central", "precision", "g
     graphics::layout(rbind(1, 2), heights=c(0.85, 0.15))
     graphics::par(mar=c(4.1, 4.1, 4.1, ifelse(isTRUE(quant.scale), 5.1, 3.1)))
     if(isTRUE(SPS)) {
-      tmp_labs    <- MEDseq_clustnames(x, cluster=TRUE, ...)[as.numeric(replace(perm, G, G))]
+      tmp_labs    <- MEDseq_clustnames(x, cluster=TRUE, weighted=weighted, ...)[as.numeric(replace(perm, G, G))]
       graphics::par(mar=replace(graphics::par()$mar, 2L, .lab_width(tmp_labs)))
     }
     i.ind         <- is.infinite(lambda)
@@ -2311,6 +2329,8 @@ plot.MEDseq       <- function(x, type = c("clusters", "central", "precision", "g
       if(is.null(object))        stop("ASW values cannot be plotted as the model only has 1 non-empty component", call.=FALSE)
     })
     rownames(object)       <- as.character(Nseq)
+    G             <- attr(object, "G")
+    modtype       <- attr(object, "ModelType")
     cl            <- object[,"cluster"]
     X             <- object[order(cl, -object[,2L]),, drop=FALSE]
     if(isTRUE(sericlus))    {
@@ -2323,8 +2343,6 @@ plot.MEDseq       <- function(x, type = c("clusters", "central", "precision", "g
     space[space   != 0]    <- 0.5
     ng            <- table(cl)
     if(length(ng) != G)          warning("Model has one or more empty components", call.=FALSE, immediate.=TRUE)
-    G             <- attr(object, "G")
-    modtype       <- attr(object, "ModelType")
     noise         <- modtype %in% c("CCN", "UCN", "CUN", "UUN")
     if(identical(palette, grDevices::palette("default"))) {
       palette     <- if(isTRUE(has_viridis)) viridisLite::viridis(G, option="H", direction=1) else rep(c("#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00", "#FFFF33", "#A65628", "#F781BF", "#999999"), length.out=G)
@@ -2337,11 +2355,13 @@ plot.MEDseq       <- function(x, type = c("clusters", "central", "precision", "g
     summ          <- attr(object, "Summ")
     if(Weighted)   {
       weights     <- attr(x, "Weights")[order(cl, -object[,2L])]
-      switch(EXPR=summ, median=graphics::title(main=paste0("(Weighted) ", switch(EXPR=type, dbsvals="Density-based ", ""), "Silhouette Plot", ifelse(isTRUE(sericlus), " (Ordered by Cluster)", "")), sub=paste0("(Weighted) Median ", switch(EXPR=type, dbsvals="DBS", "Silhouette"), " Width : ", round(weightedMedian(sil, weights), digits=3)), adj=0),
-                          mean=graphics::title(main=paste0("(Weighted) ", switch(EXPR=type, dbsvals="Density-based ", ""), "Silhouette Plot", ifelse(isTRUE(sericlus), " (Ordered by Cluster)", "")), sub=paste0("(Weighted) Mean ",   switch(EXPR=type, dbsvals="DBS", "Silhouette"), " Width : ", round(weightedMean(sil,   weights), digits=3)), adj=0))
+      wSIL        <- switch(EXPR=summ, median=weightedMedian(sil, weights), mean=weightedMean(sil, weights))
+      switch(EXPR=summ, median=graphics::title(main=paste0("(Weighted) ", switch(EXPR=type, dbsvals="Density-based ", ""), "Silhouette Plot", ifelse(isTRUE(sericlus), " (Ordered by Cluster)", "")), sub=paste0("(Weighted) Median ", switch(EXPR=type, dbsvals="DBS", "Silhouette"), " Width : ", round(wSIL, digits=3)), adj=0),
+                          mean=graphics::title(main=paste0("(Weighted) ", switch(EXPR=type, dbsvals="Density-based ", ""), "Silhouette Plot", ifelse(isTRUE(sericlus), " (Ordered by Cluster)", "")), sub=paste0("(Weighted) Mean ",   switch(EXPR=type, dbsvals="DBS", "Silhouette"), " Width : ", round(wSIL, digits=3)), adj=0))
     } else         {
-      switch(EXPR=summ, median=graphics::title(main=paste0(switch(EXPR=type, dbsvals="Density-based ", ""), "Silhouette Plot"), sub=paste0("Median ", switch(EXPR=type, dbsvals="DBS", "Silhouette"), " Width : ", round(stats::median(sil), digits=3)), adj=0),
-                          mean=graphics::title(main=paste0(switch(EXPR=type, dbsvals="Density-based ", ""), "Silhouette Plot"), sub=paste0("Mean ",   switch(EXPR=type, dbsvals="DBS", "Silhouette"), " Width : ", round(mean(sil),          digits=3)), adj=0))
+      wSIL        <- switch(EXPR=summ, median=stats::median(sil), mean=mean(sil))
+      switch(EXPR=summ, median=graphics::title(main=paste0(switch(EXPR=type, dbsvals="Density-based ", ""), "Silhouette Plot"), sub=paste0("Median ", switch(EXPR=type, dbsvals="DBS", "Silhouette"), " Width : ", round(wSIL, digits=3)), adj=0),
+                          mean=graphics::title(main=paste0(switch(EXPR=type, dbsvals="Density-based ", ""), "Silhouette Plot"), sub=paste0("Mean ",   switch(EXPR=type, dbsvals="DBS", "Silhouette"), " Width : ", round(wSIL, digits=3)), adj=0))
     }
     graphics::mtext(paste0("n = ", N),  adj=0)
     graphics::mtext(substitute(G~modtype~"clusters"~C[g], list(G=G, modtype=modtype)), adj=1)
@@ -2360,7 +2380,24 @@ plot.MEDseq       <- function(x, type = c("clusters", "central", "precision", "g
     for(g in seq_len(G)) {
       graphics::text(1, medy[g], paste(ifelse(g == G && noise, "Noise", g), ":  ", ng[g], " | ", format(meds[g], digits=1, nsmall=2)), xpd=NA, adj=0.8)
     }
+    w.r           <- cumsum(space + 1L)
+    w.l           <- w.r - 1L
+    graphics::segments(x0=wSIL, y0=min(w.l), y1=max(w.r), lty=2)
       invisible()
+  }, similarity=   {
+    sim           <- sim[glo.order,glo.order]
+    col           <- grDevices::heat.colors(30L, rev=TRUE)
+    oldpar        <- suppressWarnings(graphics::par(no.readonly=TRUE))
+    oldpar$new    <- FALSE
+    on.exit(suppressWarnings(graphics::par(oldpar)))
+    graphics::par(mar=c(5.1, 4.1, 4.1, 3.1))
+    graphics::image(t(sim[seq(from=N, to=1L, by=-1L),]), col=col, main="Similarity Matrix",
+                    xlab=paste0("Observation 1:N", if(seriated != "none") " (Reordered)"),
+                    ylab=paste0("Observation 1:N", if(seriated != "none") " (Reordered)"))
+    graphics::title(switch(EXPR=seriated, clusters="(Ordered by Clusters)", observations="(Ordered by Observations)", both="(Ordered by Clusters and Observations)", ""), cex.main=0.8, line=0.5)
+    graphics::box(lwd=2)
+    suppressWarnings(.heat_legend(data=sim, col=col, cex.lab=0.8))
+      invisible(if(seriated == "none") sim else provideDimnames(sim, base=list(as.character(glo.order), as.character(glo.order))))
   }, uncert.profile=,
      uncert.bar=   {
     if(attr(x, "Algo") == "CEM") message("No uncertainties to plot: model was fitted via CEM\n")
@@ -2368,7 +2405,7 @@ plot.MEDseq       <- function(x, type = c("clusters", "central", "precision", "g
     if(has.dot)    {
       z           <- do.call(get_MEDseq_results, c(list(x=x, what="z"), dots[!(names(dots) %in% c("x", "what"))]))
       G           <- ncol(z)
-      uncX        <- 1 - rowMaxs(z)
+      uncX        <- if(G > 1) 1 - rowMaxs(z) else integer(N)
     } else uncX   <- x$uncert
     oneG          <- 1/G
     min1G         <- 1 - oneG
@@ -2426,13 +2463,13 @@ plot.MEDseq       <- function(x, type = c("clusters", "central", "precision", "g
     }
     MAP           <- MAP2  <- factor(replace(MAP, MAP == 0, "Noise"), levels=switch(EXPR=type, i=, I=replace(perm, perm == 0, "Noise"), perm))
     if(isTRUE(SPS))         {
-      levels(MAP) <- MEDseq_clustnames(x, ...)
+      levels(MAP) <- MEDseq_clustnames(x, weighted=weighted, ...)
     }
     MAP           <- switch(EXPR=type, i=, I=MAP[glo.order],  MAP)
     dat           <- switch(EXPR=type, i=, I=dat[glo.order,], dat)
     if(length(weighted) != 1  ||
        !is.logical(weighted))    stop("'weighted' must be a single logical indicator",    call.=FALSE)
-    weighted      <- weighted && attr(x, "Weighted")
+    weighted      <- weighted && Weighted
     attr(dat, "weights")      <- if(weighted) switch(EXPR=type, i=, I=attr(dat, "Weights")[glo.order], attr(dat, "Weights"))        else rep(1L, N)
     if(type       == "ms")  {
       noisemap    <- which(MAP2    != "Noise")
@@ -2479,6 +2516,10 @@ plot.MEDseq       <- function(x, type = c("clusters", "central", "precision", "g
     dots          <- c(list(seqdata=dat, group=MAP, with.legend=type != "Ht", with.missing=FALSE, type=type, weighted=weighted), 
                        dots[!(names(dots) %in% c("G", "modtype", "noise", "cluster", "size"))])
     dots          <- switch(EXPR=type, Ht=dots[names(dots) != "border"], if(!any(names(dots) == "border")) c(list(border=NA), dots) else dots)
+    if(type       == "dH"     && 
+       !("cols" %in% names(dots))) {
+      dots        <- c(dots, list(col="black", cols=NA))
+    } 
     dots          <- switch(EXPR=type,  I=c(list(space=0L),   dots), dots)
     dots          <- switch(EXPR=type, mt=c(list(prop=FALSE), dots), dots)
     dots          <- dots[unique(names(dots))]
@@ -2955,7 +2996,6 @@ print.summaryMEDgate  <- function(x, ...) {
 #'               symmetric = TRUE,
 #'               SPS = FALSE)
 #' @examples
-#' \dontshow{suppressMessages(require(TraMineR))}
 #' # Load the MVAD data
 #' data(mvad)
 #' mvad$Location <- factor(apply(mvad[,5:9], 1L, function(x) 
@@ -3069,7 +3109,7 @@ MEDseq_stderr.MEDseq <- function(mod, method = c("WLBS", "Jackknife"), N = 1000L
 #' @param norm A logical indicating whether the mean times (outputted values after the first column) are normalised to sum to the sequence length within each cluster (defaults to \code{TRUE}). Otherwise, when \code{FALSE}, entries beyond the first column give the total (weighted) number of times a given sequence category was observed in a given cluster.
 #' @param prop A logical (defaulting to \code{FALSE} and only invoked when \code{norm} is also \code{TRUE}) which further normalises the output to give the \emph{proportions} of time spent in each state on average instead of the absolute values.
 #' @param map.size A logical (defaulting to \code{FALSE}, unless the model was fitted by the CEM algorithm (see \code{\link{MEDseq_control}})) which overrides \code{MAP} in the \code{Size} column (or \code{Weighted.Size} column, see \code{wt.size}) of the output, e.g. if \code{MAP=FALSE} and \code{map.size=TRUE}, the MAP classification is used to determine the cluster sizes but the soft cluster-membership probabilities are used to calculate quantities in remaining columns. Only relevant when \code{MAP=FALSE} or \code{wt.size=TRUE}.
-#' @param wt.size A logical (default to \code{FALSE} and only invoked when when \code{weighted} is also \code{TRUE}) which toggles whether the weights are \emph{also} used in the computation of the cluster sizes in the first column of the output (regardless of the values of \code{MAP} or \code{map.size}).
+#' @param wt.size A logical (defaults to \code{FALSE} and only invoked when when \code{weighted} is also \code{TRUE}) which toggles whether the weights are \emph{also} used in the computation of the cluster sizes in the first column of the output (regardless of the values of \code{MAP} or \code{map.size}).
 #' @param SPS A logical indicating whether the output should be labelled according to the state-permanence-sequence representation of the central sequences. Defaults to \code{FALSE}. See \code{\link{MEDseq_clustnames}} and \code{\link[TraMineR]{seqformat}}.
 #' 
 #' @details Models with weights, covariates, &/or a noise component are also accounted for.
@@ -3092,7 +3132,6 @@ MEDseq_stderr.MEDseq <- function(mod, method = c("WLBS", "Jackknife"), N = 1000L
 #'                 wt.size = FALSE,
 #'                 SPS = FALSE)
 #' @examples
-#' \dontshow{suppressMessages(require(TraMineR))}
 #' \donttest{data(biofam)
 #' seqs <- seqdef(biofam[10:25] + 1L,
 #'                states = c("P", "L", "M", "L+M", "C", 
@@ -3200,6 +3239,7 @@ print.MEDseqMeanTime <- function(x, digits = 3L, ...) {
 #' @param x An object of class \code{"MEDseq"} generated by \code{\link{MEDseq_fit}} or an object of class \code{"MEDseqCompare"} generated by \code{\link{MEDseq_compare}}.
 #' @param cluster A logical indicating whether names should be prepended with the text "\code{Cluster g: }", where \code{g} is the cluster number. Defaults to \code{TRUE}. 
 #' @param size A logical indicating whether the (typically 'soft') size of each cluster is appended to the label of each group, expressed as a percentage of the total number of observations. Defaults to \code{FALSE}. 
+#' @param weighted A logical indicating whether the sampling weights (if any) are used when appending the \code{size} of each cluster to the labels. Defaults to \code{FALSE}.
 #' @param ... Catches unused arguments. 
 #' @param names The output of \code{MEDseq_clustnames} to be passed to the convenience function \code{MEDseq_nameclusts} (see \code{Details}).
 #' 
@@ -3207,7 +3247,7 @@ print.MEDseqMeanTime <- function(x, digits = 3L, ...) {
 #' @return For \code{MEDseq_clustnames}, a character vector containing the names for each component defined by their central sequence, and optionally the cluster name (see \code{cluster} above) and cluster size (see \code{size} above). The name for the noise component, if any, will always be simply \code{"Noise"} (or \code{"Cluster 0: Noise"}).
 #' 
 #' For \code{MEDseq_nameclusts}, a factor version of \code{x$MAP} with levels given by the output of \code{MEDseq_clustnames}.
-#' @note The main \code{MEDseq_clustnames} function is used internally by \code{\link{plot.MEDseq}}, \code{\link{MEDseq_meantime}}, \code{\link{MEDseq_stderr}}, and also other \code{print} and \code{summary} methods, where its invocation can typically controlled via a \code{SPS} logical argument. However, the optional arguments \code{cluster} and \code{size} can only be passed through \code{\link{plot.MEDseq}}; elsewhere \code{cluster=TRUE} and \code{size=FALSE} are always assumed.
+#' @note The main \code{MEDseq_clustnames} function is used internally by \code{\link{plot.MEDseq}}, \code{\link{MEDseq_meantime}}, \code{\link{MEDseq_stderr}}, and also other \code{print} and \code{summary} methods, where its invocation can typically controlled via a \code{SPS} logical argument. However, the optional arguments \code{cluster}, \code{size}, and \code{weighted} can only be passed through \code{\link{plot.MEDseq}}; elsewhere \code{cluster=TRUE}, \code{size=FALSE}, and \code{weighted=FALSE} are always assumed.
 #' 
 #' @references Murphy, K., Murphy, T. B., Piccarreta, R., and Gormley, I. C. (2021). Clustering longitudinal life-course sequences using mixtures of exponential-distance models. \emph{Journal of the Royal Statistical Society: Series A (Statistics in Society)}, 184(4): 1414-1451. <\href{https://rss.onlinelibrary.wiley.com/doi/abs/10.1111/rssa.12712}{doi:10.1111/rssa.12712}>.
 #' @author Keefe Murphy - <\email{keefe.murphy@@mu.ie}>
@@ -3221,9 +3261,9 @@ print.MEDseqMeanTime <- function(x, digits = 3L, ...) {
 #' MEDseq_clustnames(x,
 #'                   cluster = TRUE,
 #'                   size = FALSE,
+#'                   weighted = FALSE,
 #'                   ...)
 #' @examples
-#' \dontshow{suppressMessages(require(TraMineR))}
 #' # Load the MVAD data
 #' data(mvad)
 #' mvad$Location <- factor(apply(mvad[,5:9], 1L, function(x) 
@@ -3251,9 +3291,9 @@ print.MEDseqMeanTime <- function(x, digits = 3L, ...) {
 #' group  <- MEDseq_nameclusts(names)
 #' 
 #' # Use the output in plots
-#' seqplot(mvad.seq, type="d", group=group)
+#' plot(mod, type="d", soft=FALSE, weighted=FALSE, cluster=FALSE, size=TRUE, border=TRUE)
 #' # same as:
-#' # plot(mod, type="d", soft=FALSE, weighted=FALSE, cluster=FALSE, size=TRUE, border=TRUE)
+#' # seqplot(mvad.seq, type="d", group=group)
 #' 
 #' # Indeed, this function is invoked by default for certain plot types
 #' plot(mod, type="d", soft=TRUE, weighted=TRUE)
@@ -3269,13 +3309,13 @@ print.MEDseqMeanTime <- function(x, digits = 3L, ...) {
 #' # Invoke this function in other plots
 #' plot(mod, type="clusters", SPS=TRUE)
 #' plot(mod, type="precision", SPS=TRUE)}
-MEDseq_clustnames        <- function(x, cluster = TRUE, size = FALSE, ...) {
+MEDseq_clustnames        <- function(x, cluster = TRUE, size = FALSE, weighted = FALSE, ...) {
     UseMethod("MEDseq_clustnames")
 }
 
 #' @method MEDseq_clustnames MEDseq
 #' @export
-MEDseq_clustnames.MEDseq <- function(x, cluster = TRUE, size = FALSE, ...) {
+MEDseq_clustnames.MEDseq <- function(x, cluster = TRUE, size = FALSE, weighted = FALSE, ...) {
   x               <- if(inherits(x, "MEDseqCompare")) x$optimal else x
   if(length(cluster)     != 1 ||
      !is.logical(cluster))       stop("'cluster' must be a single logical indicator", call.=FALSE)
@@ -3284,9 +3324,9 @@ MEDseq_clustnames.MEDseq <- function(x, cluster = TRUE, size = FALSE, ...) {
   X               <- utils::capture.output(print(x$params$theta, SPS=TRUE))[-1L]
   X               <- paste0("(", sub("^.*?\\((.*)\\)[^)]*$", "\\1", X), ")")
   noise           <- vapply(X, function(x) grepl("*", x, fixed = TRUE), logical(1L))
-  X               <- if(any(noise))      c(X[!noise], "Noise")                                                        else X
-  X               <- if(isTRUE(cluster)) paste0("Cluster ", replace(seq_len(x$G), noise, 0L), ": ", X)                else X
-  X               <- if(isTRUE(size))    paste0(X, "~[", round(colMeans2(x$z * attr(x, "Weights")) * 100L, 1L), "%]") else X
+  X               <- if(any(noise))      c(X[!noise], "Noise")                                                         else X
+  X               <- if(isTRUE(cluster)) paste0("Cluster ", replace(seq_len(x$G), noise, 0L), ": ", X)                 else X
+  X               <- if(isTRUE(size))    paste0(X, "~[", round(colMeans2(x$z * if(isTRUE(weighted)) attr(x, "Weights") else 1L) * 100L, 1L), "%]") else X
   attr(X, "MAP")  <- x$MAP
   attr(X, "G")    <- x$G
   class(X)        <- "MEDnames"
@@ -3317,7 +3357,7 @@ MEDseq_nameclusts.MEDnames  <- function(names) {
 #' where \eqn{n} and \eqn{G} are the sample size and number of components, respectively, and \eqn{\hat{z}_{ig}} is the estimated posterior probability at convergence that observation \eqn{i} belongs to component \eqn{g}.
 #' @return A single number, given by \eqn{1-H}, in the range [0,1], such that \emph{larger} values indicate clearer separation of the clusters.
 #' @note This function will always return a normalised entropy of \code{1} for models fitted using the \code{"CEM"} algorithm (see \code{\link{MEDseq_control}}), or models with only one component.
-#' @seealso \code{\link{MEDseq_fit}}, \code{\link{MEDseq_control}}
+#' @seealso \code{\link{MEDseq_fit}}, \code{\link{MEDseq_control}}, \code{\link{MEDseq_AvePP}}
 #' @references Murphy, K., Murphy, T. B., Piccarreta, R., and Gormley, I. C. (2021). Clustering longitudinal life-course sequences using mixtures of exponential-distance models. \emph{Journal of the Royal Statistical Society: Series A (Statistics in Society)}, 184(4): 1414-1451. <\href{https://rss.onlinelibrary.wiley.com/doi/abs/10.1111/rssa.12712}{doi:10.1111/rssa.12712}>.
 #' @author Keefe Murphy - <\email{keefe.murphy@@mu.ie}>
 #' @keywords utility
@@ -3326,7 +3366,6 @@ MEDseq_nameclusts.MEDnames  <- function(names) {
 #' @export
 #'
 #' @examples
-#' \dontshow{suppressMessages(require(TraMineR))}
 #' # Load the MVAD data
 #' data(mvad)
 #' mvad$Location <- factor(apply(mvad[,5:9], 1L, function(x) 
@@ -3363,16 +3402,71 @@ MEDseq_entropy.MEDseq      <- function(x) {
     ifelse(attr(x, "Algo") == "CEM" || G == 1, 1L, pmax(0L, 1 - .entropy(z)/(n * log(G))))
 }
 
+#' Average posterior probabilities of a fitted MEDseq model
+#'
+#' Calculates the per-component average posterior probabilities of a fitted MEDseq model.
+#' @param x An object of class \code{"MEDseq"} generated by \code{\link{MEDseq_fit}} or an object of class \code{"MEDseqCompare"} generated by \code{\link{MEDseq_compare}}.
+#'
+#' @details This function calculates AvePP, the average posterior probability of membership for each component for the observations assigned to that component via MAP probabilities.
+#' @return A named vector of numbers, of length equal to the number of components (G), in the range [1/G,1], such that \emph{larger} values indicate clearer separation of the clusters.
+#' @note This function will always return values of \code{1} for all components for models fitted using the \code{"CEM"} algorithm (see \code{\link{MEDseq_control}}), or models with only one component.
+#' @seealso \code{\link{MEDseq_fit}}, \code{\link{MEDseq_control}}, \code{\link{MEDseq_entropy}}
+#' @references Murphy, K., Murphy, T. B., Piccarreta, R., and Gormley, I. C. (2021). Clustering longitudinal life-course sequences using mixtures of exponential-distance models. \emph{Journal of the Royal Statistical Society: Series A (Statistics in Society)}, 184(4): 1414-1451. <\href{https://rss.onlinelibrary.wiley.com/doi/abs/10.1111/rssa.12712}{doi:10.1111/rssa.12712}>.
+#' @author Keefe Murphy - <\email{keefe.murphy@@mu.ie}>
+#' @keywords utility
+#' @usage
+#' MEDseq_AvePP(x)
+#' @export
+#'
+#' @examples
+#' # Load the MVAD data
+#' data(mvad)
+#' mvad$Location <- factor(apply(mvad[,5:9], 1L, function(x) 
+#'                  which(x == "yes")), labels = colnames(mvad[,5:9]))
+#' mvad          <- list(covariates = mvad[c(3:4,10:14,87)],
+#'                       sequences = mvad[,15:86], 
+#'                       weights = mvad[,2])
+#' mvad.cov      <- mvad$covariates
+#' 
+#' # Create a state sequence object with the first two (summer) time points removed
+#' states        <- c("EM", "FE", "HE", "JL", "SC", "TR")
+#' labels        <- c("Employment", "Further Education", "Higher Education", 
+#'                    "Joblessness", "School", "Training")
+#' mvad.seq      <- seqdef(mvad$sequences[-c(1,2)], states=states, labels=labels)
+#' 
+#' # Fit a model with weights and a gating covariate
+#' # Have the probability of noise-component membership be constant
+#' mod           <- MEDseq_fit(mvad.seq, G=11, modtype="UUN", weights=mvad$weights, 
+#'                             gating=~ gcse5eq, covars=mvad.cov, noise.gate=FALSE)
+#' 
+#' # Calculate the AvePP
+#' MEDseq_AvePP(mod)
+MEDseq_AvePP               <- function(x) {
+    UseMethod("MEDseq_AvePP")
+}
+
+#' @method MEDseq_AvePP MEDseq
+#' @export
+MEDseq_AvePP.MEDseq        <- function(x) {
+  x           <- if(inherits(x, "MEDseqCompare")) x$optimal else x
+  z    <- x$z
+  G    <- ncol(z)
+  nX   <- attr(x, "Noise")
+  gnam <- paste0("Group", seq_len(G))
+  MAP  <- replace(x$MAP, x$MAP == 0, G)
+    stats::setNames(vapply(seq_len(G), function(g) mean(z[MAP == g,g]), numeric(1L)),
+                    if(isTRUE(nX)) replace(gnam, G, "Noise") else gnam)
+}
 #' Weighted K-Modes Clustering with Tie-Breaking
 #'
 #' Perform k-modes clustering on categorical data with observation-specific sampling weights and tie-breaking adjustments.
 #' @param data A matrix or data frame of categorical data. Objects have to be in rows, variables in columns.
-#' @param modes Either the number of modes or a set of initial (distinct) cluster modes (where each mode is a row and \code{modes} has the same number of columns as \code{data}). If a number, a random set of (distinct) rows in \code{data} is chosen as the initial modes.
+#' @param modes Either the number of modes or a set of initial (distinct) cluster modes (where each mode is a row and \code{modes} has the same number of columns as \code{data}). If a number, a random set of (distinct) rows in \code{data} is chosen as the initial modes. Note, this randomness is always present, and is not governed by \code{random} below.
 #' @param weights Optional numeric vector containing non-negative observation-specific case weights.
 #' @param iter.max The maximum number of iterations allowed. Defaults to \code{.Machine$integer.max}. The algorithm terminates when \code{iter.max} is reached or when the partition ceases to change between iterations.
-#' @param freq.weighted A logical indicating whether the usual simple-matching (Hamming) distance between objects is used, or a frequency weighted version of this distance. Default to \code{FALSE}; when \code{TRUE}, the frequency weights are computed within the algorithm and are \emph{not} user-specified. Distinct from the observation-level \code{weights} above, the frequency weights are assigned on a per-feature basis and derived from the categories represented in each column of \code{data}.
+#' @param freq.weighted A logical indicating whether the usual simple-matching (Hamming) distance between objects is used, or a frequency weighted version of this distance. Defaults to \code{FALSE}; when \code{TRUE}, the frequency weights are computed within the algorithm and are \emph{not} user-specified. Distinct from the observation-level \code{weights} above, the frequency weights are assigned on a per-feature basis and derived from the categories represented in each column of \code{data}. For convenience, the function \code{dist_freqwH} is provided for calculating the corresponding pairwise dissimilarity matrix for subsequent use.
 #' @param fast A logical indicating whether a fast version of the algorithm should be applied. Defaults to \code{TRUE}.
-#' @param random A logical indicating whether ties for the modal values &/or assignments are broken at random. Defaults to \code{TRUE} (the implied default had been \code{FALSE} prior to version 1.3.2 of this package, as per \code{klaR::kmodes}). 
+#' @param random A logical indicating whether ties for the modal values &/or assignments are broken at random. Defaults to \code{TRUE}: the implied default had been \code{FALSE} prior to version \code{1.3.2} of this package, as per \code{klaR::kmodes} prior to version \code{1.7-1} (see Note). Note that when \code{modes} is specified as the number of modes, the algorithm is \emph{always} randomly initialised, regardless of the specification of \code{random}.
 #' 
 #' Regarding the modes, ties are broken at random when \code{TRUE} and the first candidate state is always chosen for the mode when \code{FALSE}. Regarding assignments, tie-breaking is always first biased in favour of the observation's most recent cluster: regarding ties thereafter, these are broken at random when \code{TRUE} or the first other candidate cluster is always chosen when \code{FALSE}.
 #' @param ... Catches unused arguments.
@@ -3381,7 +3475,7 @@ MEDseq_entropy.MEDseq      <- function(x) {
 #' 
 #' The data given by \code{data} is clustered by the k-modes method (Huang, 1997) which aims to partition the objects into k groups such that the distance from objects to the assigned cluster modes is minimised. 
 #' 
-#' By default, the simple-matching (Hamming) distance is used to determine the dissimilarity of two objects. It is computed by counting the number of mismatches in all variables. Alternatively, this distance can be weighted by the frequencies of the categories in data, using the \code{freq.weighted}n argument (see Huang, 1997, for details).
+#' By default, the simple-matching (Hamming) distance is used to determine the dissimilarity of two objects. It is computed by counting the number of mismatches in all variables. Alternatively, this distance can be weighted by the frequencies of the categories in data, using the \code{freq.weighted} argument (see Huang, 1997, for details). For convenience, the function \code{dist_freqwH} is provided for calculating the corresponding pairwise dissimilarity matrix for subsequent use.
 #' 
 #' If an initial matrix of modes is supplied, it is possible that no object will be closest to one or more modes. In this case, fewer clusters than the number of supplied modes will be returned and a warning will be printed.
 #' 
@@ -3389,22 +3483,26 @@ MEDseq_entropy.MEDseq      <- function(x) {
 #' 
 #' @note This code is adapted from the \code{kmodes} function in the \pkg{klaR} package. Specifically, modifications were made to allow for random tie-breaking for the modes and assignments (see \code{random} above) and the incorporation of observation-specific sampling \code{weights}, with a view to using this function as a means to initialise the allocations for MEDseq models (see the \code{\link{MEDseq_control}} argument \code{init.z} and the related options \code{"kmodes"} and \code{"kmodes2"}). 
 #' 
-#' Notably, the \code{wKModes} function, when invoked inside \code{\link{MEDseq_fit}}, is used regardless of whether the weights are true sampling weights, or the weights are merely aggregation weights, or there are no weights at all. Furthermore, the \code{\link{MEDseq_control}} argument \code{random} is \emph{also} passed to \code{wKmodes} when it is invoked inside \code{\link{MEDseq_fit}}.
+#' Notably, the \code{wKModes} function, when invoked inside \code{\link{MEDseq_fit}}, is used regardless of whether the weights are true sampling weights, or the weights are merely aggregation weights, or there are no weights at all. Furthermore, the \code{\link{MEDseq_control}} argument \code{random} is \emph{also} passed to \code{wKModes} when it is invoked inside \code{\link{MEDseq_fit}}.
+#' 
+#' \strong{Update}: as of version \code{1.7-1} of \pkg{klaR}, \code{klaR::kmodes} now breaks assignment ties at random only when \code{fast=TRUE}. It still breaks assignment ties when \code{fast=FALSE} and all ties for modal values in the non-random manner described above. Thus, the old behaviour of \code{klaR::kmodes} can be recovered by specifying \code{random=FALSE} here, but \code{random=TRUE} allows random tie-breaking for both types of ties in all situations.
 #' @return An object of class \code{"wKModes"} which is a list with the following components:
 #' \describe{
 #' \item{\code{cluster}}{A vector of integers indicating the cluster to which each object is allocated.}
 #' \item{\code{size}}{The number of objects in each cluster.}
 #' \item{\code{modes}}{A matrix of cluster modes.}
 #' \item{\code{withindiff}}{The within-cluster (weighted) simple-matching distance for each cluster.}
+#' \item{\code{tot.withindiff}}{The total within-cluster (weighted) distance over all clusters. \code{tot.withindiff} can be used to guide the choice of the number of clusters, but beware of inherent randomness in the algorithm, which is liable to yield a jagged elbow plot (see examples).}
 #' \item{\code{iterations}}{The number of iterations the algorithm reached.}
 #' \item{\code{weighted}}{A logical indicating whether observation-level \code{weights} were used or not throughout the algorithm.}
-#' \item{\code{freq.weighted}}{A logical indicating whether feature-level \code{freq.weights} were used or not in the computation of the distances.}
+#' \item{\code{freq.weighted}}{A logical indicating whether feature-level \code{freq.weights} were used or not in the computation of the distances. For convenience, the function \code{dist_freqwH} is provided for calculating the corresponding pairwise dissimilarity matrix for subsequent use.}
 #' \item{\code{random}}{A logical indicating whether ties were broken at random or not throughout the algorithm.}}
 #' @references Huang, Z. (1997). A fast clustering algorithm to cluster very large categorical data sets in data mining. In H. Lu, H. Motoda, and H. Luu (Eds.), \emph{KDD: Techniques and Applications}, pp. 21-34. Singapore: World Scientific.
 #' 
 #' MacQueen, J. (1967). Some methods for classification and analysis of multivariate observations. In L. M. L. Cam and J. Neyman (Eds.), \emph{Proceedings of the Fifth Berkeley Symposium on  Mathematical Statistics and Probability}, Volume 1, pp. 281-297. Berkeley, CA, USA: University of California Press.
 #' @author Keefe Murphy - <\email{keefe.murphy@@mu.ie}>
-#' @seealso \code{\link{MEDseq_control}}, \code{\link{MEDseq_fit}}
+#' (adapted from \code{klaR::kmodes})
+#' @seealso \code{\link{MEDseq_control}}, \code{\link{MEDseq_fit}}, \code{\link{dist_freqwH}}
 #' @keywords utility
 #' @importFrom matrixStats "colMeans2"
 #' @importFrom TraMineR "seqdef" "seqformat"
@@ -3420,28 +3518,39 @@ MEDseq_entropy.MEDseq      <- function(x) {
 #'         random = TRUE,
 #'         ...)
 #' @examples
-#' \dontshow{suppressMessages(require(TraMineR)); suppressMessages(require(WeightedCluster))}
+#' suppressMessages(require(WeightedCluster))
+#' set.seed(99)
 #' # Load the MVAD data & aggregate the state sequences
 #' data(mvad)
-#' aggMVAD  <- wcAggregateCases(mvad[,17:86], weights=mvad$weight)
+#' agg      <- wcAggregateCases(mvad[,17:86], weights=mvad$weight)
 #' 
 #' # Create a state sequence object without the first two (summer) time points
 #' states   <- c("EM", "FE", "HE", "JL", "SC", "TR")
 #' labels   <- c("Employment", "Further Education", "Higher Education", 
 #'               "Joblessness", "School", "Training")
-#' mvad.seq <- seqdef(mvad[aggMVAD$aggIndex, 17:86], 
+#' mvad.seq <- seqdef(mvad[agg$aggIndex, 17:86], 
 #'                    states=states, labels=labels, 
-#'                    weights=aggMVAD$aggWeights)
+#'                    weights=agg$aggWeights)
 #' 
 #' # Run k-modes without the weights
 #' resX     <- wKModes(mvad.seq, 2)
 #' 
 #' # Run k-modes with the weights
-#' resW     <- wKModes(mvad.seq, 2, weights=aggMVAD$aggWeights)
+#' resW     <- wKModes(mvad.seq, 2, weights=agg$aggWeights)
 #' 
 #' # Examine the modal sequences of both solutions
 #' seqformat(seqdef(resX$modes), from="STS", to="SPS", compress=TRUE)
 #' seqformat(seqdef(resW$modes), from="STS", to="SPS", compress=TRUE)
+#' 
+#' # Using tot.withindiff to choose the number of clusters
+#' \donttest{
+#' TWdiffs   <- sapply(1:5, function(k) wKModes(mvad.seq, k, weights=agg$aggWeights)$tot.withindiff)
+#' plot(TWdiffs, type="b", xlab="K")
+#' 
+#' # Use multiple random starts to account for inherent randomness
+#' TWDiff    <- sapply(1:5, function(k) min(replicate(10, 
+#'                     wKModes(mvad.seq, k, weights=agg$aggWeights)$tot.withindiff)))
+#' plot(TWDiff, type="b", xlab="K")}
 wKModes       <- function(data, modes, weights = NULL, iter.max = .Machine$integer.max, 
                           freq.weighted = FALSE, fast = TRUE, random = TRUE, ...) {
   data        <- as.data.frame(data)
@@ -3480,7 +3589,6 @@ wKModes       <- function(data, modes, weights = NULL, iter.max = .Machine$integ
      !is.logical(random))        stop("'random' must be a single logical indicator",         call.=FALSE)
   nseq        <- seq_len(n)
   Pseq        <- seq_len(P)
-  data        <- as.data.frame(data)
   cluster     <- numeric(n)
   names(cluster)  <- nseq
   if(missing(modes))             stop("'modes' must be a number or a data frame",            call.=FALSE)
@@ -3518,8 +3626,7 @@ wKModes       <- function(data, modes, weights = NULL, iter.max = .Machine$integ
       if(!random)  {
        cluster[j] <- which.min(dist)
       } else       {
-       mdis       <- which(dist == min(dist))
-       cluster[j] <- if(length(mdis) > 1) sample(mdis, 1L) else mdis
+       cluster[j] <- .rand_MIN(dist)
       }
       modes[cluster[j],]    <- .update_mode(cluster[j], cluster, data, random, weights)
     }
@@ -3527,8 +3634,7 @@ wKModes       <- function(data, modes, weights = NULL, iter.max = .Machine$integ
       continue    <- FALSE
       for(j in nseq)  {
         dist      <- apply(modes, 1L, .km_dist, data[j,], frwts)
-        clust_new <- which(dist == min(dist))
-        clust_new <- if(length(clust_new) > 1) ifelse(cluster[j] %in% clust_new, cluster[j], ifelse(random, sample(clust_new, 1L), clust_new[1L])) else clust_new
+        clust_new <- .random_ass(dist, cluster[j], min, random, na.rm=TRUE)
         clust_old <- cluster[j]
         if(clust_new        != clust_old) {
           cluster[j]        <- clust_new
@@ -3543,7 +3649,7 @@ wKModes       <- function(data, modes, weights = NULL, iter.max = .Machine$integ
     dists     <- matrix(NA, nrow = n, ncol = k)
     if(!freq.weighted)       {
       for(i in kseq)         {
-        di    <- vapply(Pseq, function(j) return(data[,j] != rep(modes[i,j], n)), logical(n))
+        di    <- vapply(Pseq, function(j) return(data[,j] != rep.int(modes[i,j], n)), logical(n))
         dists[,i] <- if(wtd) rowSums2(di) * weights        else rowSums2(di)
       }
     }   else   {
@@ -3552,8 +3658,8 @@ wKModes       <- function(data, modes, weights = NULL, iter.max = .Machine$integ
       for(j in Pseq)      n_obj[,j] <- frwts[[j]][vapply(as.character(data[,j]),  function(z) return(which(names(frwts[[j]]) == z)), numeric(1L))]
       for(j in Pseq)     n_mode[,j] <- frwts[[j]][vapply(as.character(modes[,j]), function(z) return(which(names(frwts[[j]]) == z)), numeric(1L))]
       for(i in kseq)   {
-        di    <- vapply(Pseq, function(j) return(data[,j] != rep(modes[i,j], n)), logical(n))
-        wts   <- (n_mode[rep(i, n),] + n_obj)/(n_mode[rep(i, n),] * n_obj)
+        di    <- vapply(Pseq, function(j) return(data[,j] != rep.int(modes[i,j], n)), logical(n))
+        wts   <- 1/n_mode[rep.int(i, n),] + 1/n_obj
         dists[,i] <- if(wtd) rowSums2(di  * wts) * weights else rowSums2(di * wts)
       }
     }
@@ -3566,20 +3672,20 @@ wKModes       <- function(data, modes, weights = NULL, iter.max = .Machine$integ
       dists   <- matrix(NA, nrow = n, ncol = k)
       if(!freq.weighted)     {
        for(i in kseq)        {
-        di    <- vapply(Pseq, function(j) return(data[,j] != rep(modes[i,j], n)), logical(n))
+        di    <- vapply(Pseq, function(j) return(data[,j] != rep.int(modes[i,j], n)), logical(n))
         dists[,i] <- if(wtd) rowSums2(di) * weights        else rowSums2(di)
        }
       } else   {
        n_mode <- matrix(NA, nrow = nrow(modes), ncol = P)
        for(j in Pseq)    n_mode[,j] <- frwts[[j]][vapply(as.character(modes[,j]), function(z) return(which(names(frwts[[j]]) == z)), numeric(1L))]
        for(i in kseq) {
-        di    <- vapply(Pseq, function(j) return(data[,j] != rep(modes[i,j], n)), logical(n))
-        wts   <- (n_mode[rep(i, n),] + n_obj)/(n_mode[rep(i, n),] * n_obj)
+        di    <- vapply(Pseq, function(j) return(data[,j] != rep.int(modes[i,j], n)), logical(n))
+        wts   <- 1/n_mode[rep.int(i, n),] + 1/n_obj
         dists[,i] <- if(wtd) rowSums2(di  * wts) * weights else rowSums2(di * wts)
        }
       }
       old.cluster <- cluster
-      cluster <- vapply(nseq, function(i) .random_ass(dists[i,], cluster[i], fun=min, random), integer(1L))
+      cluster <- vapply(nseq, function(i) .random_ass(dists[i,], cluster[i], fun=min, random, na.rm=TRUE), integer(1L))
       for(j in seq_len(nrow(modes))) {
         modes[j,] <- .update_mode(j, cluster, data, random, weights)
       }
@@ -3595,13 +3701,13 @@ wKModes       <- function(data, modes, weights = NULL, iter.max = .Machine$integ
     for(j in Pseq)       n_mode[,j] <- frwts[[j]][vapply(as.character(modes[,j]), function(z) return(which(names(frwts[[j]]) == z)), numeric(1L))]
   }
   for(i in kseq)      {
-    di        <- vapply(Pseq, function(j) return(data[,j] != rep(modes[i,j], n)), logical(n))
+    di        <- vapply(Pseq, function(j) return(data[,j] != rep.int(modes[i,j], n)), logical(n))
     if(freq.weighted) {
       if(!fast)    {
         n_obj     <- matrix(NA, nrow = n, ncol = P)
         for(j in Pseq)    n_obj[,j] <- frwts[[j]][vapply(as.character(data[,j]),  function(z) return(which(names(frwts[[j]]) == z)), numeric(1L))]
       }
-      wts     <- (n_mode[rep(i, n),] + n_obj)/(n_mode[rep(i, n),] * n_obj)
+      wts     <- 1/n_mode[rep.int(i, n),] + 1/n_obj
       di      <- rowSums2(di * wts)
     } else di <- rowSums2(di)
     dists[,i] <- if(wtd)  di * weights else di
@@ -3613,10 +3719,87 @@ wKModes       <- function(data, modes, weights = NULL, iter.max = .Machine$integ
   dimnames(modes) <- list(kseq, colnames(data))
   if(any(isfactor))  for(j in which(isfactor))  modes[,j] <- factor(modes[,j], levels = levs[[j]])
   if(any(isnumeric)) for(j in which(isnumeric)) modes[,j] <- as.numeric(modes[,j])
-  result      <- list(cluster = cluster, size = cluster.size, modes = modes, withindiff = diffs, 
-                      iterations = i, weighted = wtd, freq.weighted = freq.weighted, random = random)
+  result      <- list(cluster = cluster, size = cluster.size, modes = modes, 
+                      withindiff = diffs, tot.withindiff = sum(diffs), iterations = i, 
+                      weighted = wtd, freq.weighted = freq.weighted, random = random)
   class(result)   <- "wKModes"
     return(result)
+}
+
+#' Pairwise frequency-Weighted Hamming distance matrix for categorical data
+#'
+#' Computes the matrix of pairwise distance using a frequency-weighted variant of the Hamming distance often used in k-modes clustering.
+#' @param data A matrix or data frame of categorical data. Objects have to be in rows, variables in columns.
+#' @param full.matrix Logical. If \code{TRUE} (the default), the full pairwise distance matrix is returned, otherwise an object of class \code{\link[stats]{dist}} is returned, i.e. a vector containing only values from the upper triangle of the distance matrix. Objects of class \code{dist} are smaller and can be passed directly as arguments to most clustering functions.
+#'
+#' @details As per \code{\link{wKModes}}, the frequency weights are computed within the function and are \emph{not} user-specified. These frequency weights are assigned on a per-feature basis and derived from the categories represented in each column of \code{data}.
+#' @return The whole matrix of pairwise distances if \code{full.matrix=TRUE}, otherwise the corresponding \code{\link[stats]{dist}} object.
+#' @references Huang, Z. (1997). A fast clustering algorithm to cluster very large categorical data sets in data mining. In H. Lu, H. Motoda, and H. Luu (Eds.), \emph{KDD: Techniques and Applications}, pp. 21-34. Singapore: World Scientific.
+#' @author Keefe Murphy - <\email{keefe.murphy@@mu.ie}>
+#' @seealso \code{\link{wKModes}}
+#' @keywords utility
+#' @importFrom matrixStats "rowSums2"
+#' @importFrom WeightedCluster "wcAggregateCases" "wcSilhouetteObs"
+#' @export
+#' @usage 
+#' dist_freqwH(data,
+#'             full.matrix = TRUE)
+#' @examples
+#' suppressMessages(require(WeightedCluster))
+#' set.seed(99)
+#' # Load the MVAD data & aggregate the state sequences
+#' data(mvad)
+#' agg      <- wcAggregateCases(mvad[,17:86], weights=mvad$weight)
+#' 
+#' # Create a state sequence object without the first two (summer) time points
+#' states   <- c("EM", "FE", "HE", "JL", "SC", "TR")
+#' labels   <- c("Employment", "Further Education", "Higher Education", 
+#'               "Joblessness", "School", "Training")
+#' weights  <- agg$aggWeights
+#' mvad.seq <- seqdef(mvad[agg$aggIndex, 17:86], 
+#'                    states=states, labels=labels, weights=agg$aggWeights)
+#' 
+#' # Run k-modes with weights
+#' resW     <- wKModes(mvad.seq, 2, weights=agg$aggWeights)
+#' 
+#' # Run k-modes with additional frequency weights
+#' resF     <- wKModes(mvad.seq, 2, weights=agg$aggWeights, freq.weighted=TRUE)
+#' 
+#' # Examine the average silhouette widths of both weighted solutions
+#' weighted.mean(wcSilhouetteObs(seqdist(mvad.seq, method="HAM"), resW$cluster, weights), weights)
+#' # weighted.mean(wcSilhouetteObs(seqdist(mvad.seq, method="HAM"), resF$cluster, weights), weights)
+#' weighted.mean(wcSilhouetteObs(dist_freqwH(mvad.seq), resF$cluster, weights), weights)
+dist_freqwH   <- function(data, full.matrix = TRUE) {
+  data        <- as.data.frame(data)
+  n           <- nrow(data)
+  P           <- ncol(data)
+  isnumeric   <- vapply(data, is.numeric, logical(1L))
+  isfactor    <- vapply(data, is.factor,  logical(1L))
+  if(any(isfactor))             {
+    levs      <- vector("list", P)
+    for(j in which(isfactor))   {
+      levsj   <- levels(data[,j])
+      data[,j]    <- levsj[data[,j]]
+      levs[[j]]   <- levsj
+    }
+  }
+  if(any(isnumeric))            {
+    lengths   <- vapply(data[,isnumeric], function(z) length(unique(z)), numeric(1L))
+    if(any(lengths > 30))        warning("data has numeric columns with more than 30 different levels!", call.=FALSE, immediate.=TRUE)
+  }
+  Pseq        <- seq_len(P)
+  frwts       <- lapply(Pseq, function(i) table(data[,i]))
+  nX          <- matrix(NA, nrow=n, ncol=P)
+  dX          <- matrix(NA, nrow=n, ncol=n)
+  for(j in Pseq)       {
+    nX[,j]    <- frwts[[j]][vapply(as.character(data[,j]), function(z) which(names(frwts[[j]]) == z), numeric(1L))]
+  }    
+  for(i in seq_len(n)) {
+    di        <- vapply(Pseq, function(j) data[,j] != data[i,j], logical(n))
+    wts       <- 1/nX[rep.int(i, n),] + 1/nX
+    dX[i,]    <- rowSums2(di * wts)
+  }
+    if(isTRUE(full.matrix)) dX else stats::as.dist(dX)
 }
 
 #' @method print wKModes
@@ -3629,6 +3812,8 @@ print.wKModes <- function(x, ...) {
   print(x$cluster,    ...)
   cat("\nWithin cluster simple-matching distance by cluster:\n")
   print(x$withindiff, ...)
+  cat("\nTotal within cluster simple-matching distance over all clusters:\n")
+  print(x$tot.withindiff, ...)
   cat("\nAvailable components:\n")
   print(names(x))
     invisible(x)
@@ -3662,7 +3847,6 @@ print.wKModes <- function(x, ...) {
 #'         droplevels = FALSE,
 #'         ...)
 #' @examples
-#' \dontshow{suppressMessages(require(TraMineR))}
 #' # Load the MVAD data
 #' data(mvad)
 #' mvad$Location <- factor(apply(mvad[,5:9], 1L, function(x) 
@@ -3783,5 +3967,33 @@ residuals.MEDgating  <- function(object, ...)   {
 MEDseq_news       <- function() {
   newsfile        <- file.path(system.file(package  = "MEDseq"), "NEWS.md")
     if(interactive()) file.show(newsfile) else message("The session is not interactive\n")
+}
+
+#' Create a state sequence object
+#' 
+#' Create a state sequence object with attributes such as alphabet, colour palette, and state labels. This a minimalist copy of \code{\link[TraMineR]{seqdef}} in the \pkg{TraMineR} package.
+#' @param data A data frame or matrix containing sequence data.
+#' @param ... All other arguments; see \code{\link[TraMineR]{seqdef}} in the \pkg{TraMineR} package.
+#'
+#' @return An object of class \code{"stslist"}, for which dedicated \code{print} and \code{summary} methods are inherited from \pkg{TraMineR}.
+#' @details This function exists only so experienced users of \pkg{MEDseq} and \pkg{TraMineR} can use the former without explicitly requiring the latter to be loaded. In particular, \code{\link{MEDseq_fit}} requires a state-sequence object of class \code{"stslist"} (as created by \code{seqdef}) as input. Users are encouraged to see the documentation at \code{\link[TraMineR:seqdef]{TraMineR::seqdef}} for complete details and further examples.
+#' @keywords utility
+#' @references Gabadinho, A., Ritschard, G., Mueller, N. S., and Studer, M. (2011). Analyzing and visualizing state sequences in R with \pkg{TraMineR}. \emph{Journal of Statistical Software}, 40(4): 1-37.
+#' 
+#' Gabadinho, A., Ritschard, G., Studer, M., and Mueller, N. S. (2010). Mining sequence data in \code{R} with the \pkg{TraMineR} package: a user's guide. \emph{Department of Econometrics and Laboratory of Demography, University of Geneva}.
+#' @author Alexis Gabadinho and Gilbert Ritschard
+#' @seealso \code{\link[TraMineR:seqdef]{TraMineR::seqdef}}, \code{\link{MEDseq_fit}}
+#' @importFrom TraMineR "seqdef"
+#' @usage seqdef(data, ...)
+#' @export
+#' @examples
+#' data(mvad)
+#' # Create a state sequence object with the first two (summer) time points removed
+#' states   <- c("EM", "FE", "HE", "JL", "SC", "TR")
+#' labels   <- c("Employment", "Further Education", "Higher Education", 
+#'               "Joblessness", "School", "Training")
+#' mvad.seq <- seqdef(mvad[,17:86], states=states, labels=labels, weights=mvad$weight)
+seqdef <- function(data, ...) {
+  TraMineR::seqdef(data, ...)
 }
 #

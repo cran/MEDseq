@@ -218,7 +218,7 @@
           z       <- apply(numer, 1L, function(x) which(max(x) == x))
           if(is.list(z)) {
             ty    <- which(lengths(z) > 1)
-            z[ty] <- vapply(ty,       function(i) .random_ass(numer[i,], which.max(z.old[i,]), fun=max), integer(1L))
+            z[ty] <- vapply(ty,       function(i) .random_ass(numer[i,], which.max(z.old[i,]), fun=max, na.rm=TRUE), integer(1L))
           }
           z       <- .unMAP(unlist(z),      groups=seq_len(G))
         } else     {
@@ -293,6 +293,38 @@
     as.data.frame(lapply(x, function(y) { levels(y) <- Vseq; y} ))
 }
 
+.heat_legend      <- function(data, col = NULL, cex.lab = 1, ...) {
+  if(length(cex.lab) > 1     || 
+     (!is.numeric(cex.lab)   ||
+     cex.lab      <= 0))         stop("Invalid 'cex.lab' supplied", call.=FALSE)
+  if(!is.numeric(data))          stop("'data' must be numeric",     call.=FALSE)
+  if(missing(col)) {
+    col           <- grDevices::heat.colors(30L, rev=TRUE)
+  }
+  bx              <- graphics::par("usr")
+  xpd             <- graphics::par()$xpd
+  box.cx          <- c(bx[2L] + (bx[2L]  - bx[1L])/1000, bx[2L] + (bx[2L] - bx[1L])/1000 + (bx[2L] - bx[1L])/50)
+  box.cy          <- c(bx[3L],   bx[3L])
+  box.sy          <- (bx[4L]  -  bx[3L]) / length(col)
+  xx              <- rep(box.cx, each    = 2L)
+  graphics::par(xpd = TRUE)
+  
+  for(i in seq_along(col)) {
+    yy            <- c(box.cy[1L] + (box.sy * (i - 1L)),
+                       box.cy[1L] + (box.sy * (i)),
+                       box.cy[1L] + (box.sy * (i)),
+                       box.cy[1L] + (box.sy * (i - 1L)))
+    graphics::polygon(xx, yy, col =  col[i], border = col[i])
+  }
+  
+  graphics::par(new = TRUE)
+  yrange          <- range(data, na.rm = TRUE)
+  base::plot(0, 0, type = "n",  ylim = yrange, yaxt = "n", ylab = "", xaxt = "n", xlab = "", frame.plot = FALSE)
+  graphics::axis(side = 4, las = 2, tick = FALSE, line = 0.1, cex.axis = cex.lab)
+  suppressWarnings(graphics::par(xpd = xpd))
+    invisible()
+}
+
 .km_dist          <- function(mode, obj, frwts = NULL)     {
   if(is.null(frwts)) return(sum(mode   != obj))
   obj             <- as.character(obj)
@@ -306,7 +338,7 @@
     n_mode[i]     <- frwt[which(names  == mode[different[i]])]
     n_obj[i]      <- frwt[which(names  ==  obj[different[i]])]
   }
-    return(sum((n_mode + n_obj)/(n_mode * n_obj)))
+    return(sum(1/n_mode + 1/n_obj))
 }
 
 .lab_width        <- function(x, cex = 2/3, offset = 1.5)  {
@@ -488,7 +520,7 @@
     k             <- nrow(Tab)
     Map           <- rep(0L, k)
     Max           <- rowMaxs(Tab)
-    for(i in (1L:k))    {
+    for(i in seq_len(k))    {
       I           <- match(Max[i], Tab[i,], nomatch = 0)
       aTOb[[i]]   <- Ub[I]
     }
@@ -496,7 +528,7 @@
     k             <- ncol(Tab)
     Map           <- rep(0L, k)
     Max           <- apply(Tab, 2L, max)
-    for(j in (1L:k))    {
+    for(j in seq_len(k))    {
       J           <- match(Max[j], Tab[,j])
       bTOa[[j]]   <- Ua[J] 
     }
@@ -532,9 +564,9 @@
 }
 
 .modal            <- function(x) {
-  ux              <- unique(x[x != 0])
+  ux              <- unique(x)
   tab             <- tabulate(match(x, ux))
-    ux[which(tab  == max(tab))]
+    ux[max(tab)   == tab]
 }
 
 .num_to_char      <- function(x) {
@@ -568,11 +600,22 @@
         theta     <- .weighted_mode(numseq=numseq, 
                                     z=if(G == 1) as.matrix(attr(seqs, "Weights"))   else if(nmeth) z[,Gseq, drop=FALSE] else z)
         if(is.list(theta)   && 
-           any(t_ties       <- apply(theta, c(1L, 2L), function(x) any(nchar(x) > 1)))) {
+           (any(ties_t      <- vapply(theta, is.matrix, logical(1L)))) ||
+           (any(t_ties      <- apply(theta, c(1L, 2L), function(x) any(nchar(x) > 1))))) {
           noties  <- FALSE
-          t_ties  <- which(t_ties, arr.ind=TRUE)
-          nonu    <- replace(rep(FALSE, G), unique(t_ties[,2L]), TRUE)
-          theta[t_ties]     <- lapply(theta[t_ties], if(isTRUE(ctrl$random)) sample else "[[", 1L)
+          if(any(ties_t))    {
+            nonu  <- ties_t
+            theta[ties_t]   <- lapply(theta[ties_t], apply, 2L, if(isTRUE(ctrl$random)) sample else "[[", 1L)
+            theta           <- do.call(cbind, theta)
+            t_ties          <- vapply(as.list(theta),  function(x) any(nchar(x) > 1), logical(1L))
+            t_ties          <- matrix(t_ties, nrow=nrow(theta), ncol=ncol(theta))
+          }
+          if(any(t_ties))    {
+            t_ties          <- which(t_ties, arr.ind=TRUE)
+            nonu  <- replace(rep(FALSE, G), unique(t_ties[,2L]), TRUE)
+            nonu  <- if(any(ties_t)) ties_t | nonu else nonu
+            theta[t_ties]   <- lapply(theta[t_ties], if(isTRUE(ctrl$random)) sample else "[[", 1L)
+          }
           if(ctrl$ties      &&
              ctrl$verbose)   {
             if(ctrl$random)  {   message("\tTie for modal sequence position broken at random\n")
@@ -716,23 +759,23 @@
     return(list(crits = stats::setNames(x.val[seq_len(pick)], vapply(seq_len(pick), function(p, b=x.ind[p,]) paste0(b[2L], ",", b[1L]), character(1L))), pick = pick))
 }
 
-.rand_MIN   <- function(x, random = TRUE)    {
-  if(!random)  return(which.min(x))
-  a         <- which(min(x) == x)
-  a         <- if(length(a)  > 1) sample(a, 1L) else a
+.rand_MIN   <- function(dist, random = TRUE) {
+  if(!random)  return(which.min(dist))
+  a         <- which(dist  == min(dist, na.rm=TRUE))
+  a         <- if(length(a) > 1) sample(a, 1L) else a
     return(a)
 }
 
-.rand_MAX   <- function(x, random = TRUE)    {
-  if(!random)  return(which.max(x))
-  a         <- which(max(x) == x)
-  a         <- if(length(a)  > 1) sample(a, 1L) else a
+.rand_MAX   <- function(dist, random = TRUE) {
+  if(!random)  return(which.max(dist))
+  a         <- which(dist  == max(dist, na.rm=TRUE))
+  a         <- if(length(a) > 1) sample(a, 1L) else a
     return(a)
 }
 
-.random_ass <- function(x, y, fun = max, random = TRUE) {
-  a         <- which(fun(x) == x)
-  a         <- if(length(a)  > 1) ifelse(y %in% a, y, ifelse(random, sample(a, 1L), a[1L])) else a
+.random_ass <- function(x, y, fun = max, random = TRUE, ...) {
+  a         <- which(fun(x, ...) == x)
+  a         <- if(length(a) > 1) ifelse(y %in% a, y, ifelse(random, sample(a, 1L), a[1L])) else a
     return(a)
 }
 
@@ -742,7 +785,7 @@
 }
 
 #' @importFrom matrixStats "rowSums2"
-.renorm_z         <- function(z) z/rowSums2(z)
+.renorm_z   <- function(z) z / rowSums2(z)
 
 .replace_levels   <- function(seq, levels = NULL) {
   seq             <- utf8ToInt(seq)
