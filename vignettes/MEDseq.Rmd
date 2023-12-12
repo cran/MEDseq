@@ -26,11 +26,11 @@ if(isTRUE(capabilities("cairo"))) {
 ## Introduction
 __MEDseq__ is an R package which fits a range of models introduced by [Murphy et al. (2021)](https://rss.onlinelibrary.wiley.com/doi/abs/10.1111/rssa.12712). These are finite mixtures of exponential-distance models for clustering longitudinal/categorical life-course sequence data. A family of parsimonious precision parameter constraints are accommodated. So too are sampling weights. Gating covariates can be supplied via formula interfaces. Visualisation of the results of such models is also facilitated.
 
-The most important function in the __MEDseq__ package is: `MEDseq_fit`, for fitting the models via the EM or CEM algorithms. `MEDseq_control` allows supplying additional arguments which govern, among other things, controls on the initialisation of the allocations for the EM/CEM algorithm and the various model selection options. `MEDseq_compare` is provided for conducting model selection between different results from using different covariate combinations &/or initialisation strategies, etc. `MEDseq_stderr` is provided for computing the standard errors of the coefficients for the covariates in the gating network.
+The most important function in the __MEDseq__ package is: `MEDseq_fit`, for fitting the models via the EM or CEM algorithms. This function requires the data to be in `"stslist"` format; the function `seqdef` is conveniently reexported from the __TraMineR__ package for this purpose.
+
+`MEDseq_control` allows supplying additional arguments which govern, among other things, controls on the initialisation of the allocations for the EM/CEM algorithm and the various model selection options. `MEDseq_compare` is provided for conducting model selection between different results from using different covariate combinations &/or initialisation strategies, etc. `MEDseq_stderr` is provided for computing the standard errors of the coefficients for the covariates in the gating network.
 
 A dedicated plotting function exists for visualising various aspects of the results, using new methods as well as some existing methods adapted from the __TraMineR__ package. Finally, the package also contains two data sets: `biofam` and `mvad`.
-
-If you find bugs or want to suggest new features please visit the __MEDseq__ [GitHub issues page](https://github.com/Keefe-Murphy/MEDseq/issues). 
 
 This vignette mostly aims to demonstrate the __MEDseq__ models by reproducing the analysis of the MVAD data in the Murphy et al. (2021) paper. However, an additional example data set is also analysed.
 
@@ -58,7 +58,7 @@ library(MEDseq)
 
 it will load in all the __MEDseq__ functions.
 
-The GitHub version contains a few more features but some of these may not yet be fully tested, and occasionally this version might be liable to break when it is in the process of being updated.
+The GitHub version contains a few more features but some of these may not yet be fully tested, and occasionally this version might be liable to break when it is in the process of being updated. If you find bugs or want to suggest new features please visit the __MEDseq__ [GitHub issues page](https://github.com/Keefe-Murphy/MEDseq/issues). 
 
 ```{r, echo=FALSE}
 suppressMessages(library(TraMineR))
@@ -67,17 +67,16 @@ suppressMessages(library(TraMineR))
 ## MVAD Data
 Load the MVAD data. The data comes from a study by McVicar and Anyadike-Danes (2002) on transition from school to work. The data consist of static background characteristics (covariates and sampling weights) and a time series sequence of 72 monthly labour market activities for each of 712 individuals in a cohort survey. The individuals were followed up from July 1993 to June 1999. Type `?mvad` for more information. We will drop the first two sequence positions (i.e. months) as they (along with the covariates `Grammar` and `Location`) were used to define the sampling weights.
 
-Note that the data set must have equal sequence lengths, intervals must be evenly spaced, and missingness is not allowed. The MVAD data meet these criteria. The __TraMineR__ function `seqdef` is used to convert the data to the appropriate format. 
+Note that the data set must have equal sequence lengths, intervals must be evenly spaced, and missingness is not allowed. The MVAD data meet these criteria. The __TraMineR__ function `seqdef` (which is reexported by __MEDseq__, for convenience) is used to convert the data to the appropriate format. 
 
 ```{r}
 data(mvad, package="MEDseq")
 mvad$Location <- factor(apply(mvad[,5L:9L], 1L, function(x) which(x == "yes")), 
                         labels = colnames(mvad[,5L:9L]))
-mvad          <- list(covariates = mvad[c(3L:4L,10L:14L,87L)], 
-                      sequences = mvad[,15L:86L],
-                      weights = mvad[,2L])
+mvad          <- list(covariates = mvad[c(3L:4L, 10L:14L, 87L)], 
+                      sequences = mvad[,15L:86L], weights = mvad[,2L])
 mvad.cov      <- mvad$covariates
-mvad.seq      <- seqdef(mvad$sequences[-c(1L,2L)],
+mvad.seq      <- seqdef(mvad$sequences[-c(1L, 2L)],
                         states = c("EM", "FE", "HE", "JL", "SC", "TR"),
                         labels = c("Employment", "Further Education", "Higher Education", 
                                    "Joblessness", "School", "Training"))
@@ -161,7 +160,7 @@ Use the following code to see the observation-specific (weighted) density-based 
 plot(opt, type="dbsvals")
 ```
 
-Finally, we can quantify the type of observation characterising each cluster by computing the mean time spent in each state within each cluster. By specifying `MAP=TRUE` here, we are computing the mean time based on the hard MAP partition rather than weighted by the soft cluster membership probabilities (albeit still weighted by the sampling weights used during model fitting, by default). By specifying `norm=TRUE` (which is the default), the mean times are normalised to sum to the sequence length within each cluster. The size of each cluster in terms of the number of observations assigned to it is also reported.
+Finally, we can quantify the type of observation characterising each cluster by computing the mean time spent in each state within each cluster. Specifying `MAP=TRUE` computes the mean times based on the hard MAP partition rather than weighted by the soft cluster membership probabilities (albeit still weighted by the sampling weights used during model fitting, by default). Specifying `norm=TRUE` (the default), normalises the mean times to sum to the sequence length within each cluster. The size of each cluster in terms of the number of observations assigned to it is also reported.
 
 ```{r}
 MEDseq_meantime(opt, MAP=TRUE, norm=TRUE)
@@ -176,8 +175,7 @@ biofam  <- list(covs = cbind(biofam[2L:9L], age = 2002 - biofam$birthyr),
                 sequences = biofam[10L:25L] + 1L)
 bio.cov <- biofam$covs[,colSums(is.na(biofam$covs)) == 0]
 bio.seq <- seqdef(biofam$sequences,
-                  states = c("P", "L", "M", "L+M", 
-                             "C", "L+C", "L+M+C", "D"),
+                  states = c("P", "L", "M", "L+M", "C", "L+C", "L+M+C", "D"),
                   labels = c("Parent", "Left", "Married", 
                              "Left+Marr", "Child", "Left+Child", 
                              "Left+Marr+Child", "Divorced"))
@@ -249,6 +247,6 @@ Gabadinho, A., Ritschard, G., Müller, N. S., and Studer, M. (2011). Analyzing a
 
 McVicar, D. and Anyadike-Danes, M. (2002). Predicting successful and unsuccessful transitions from school to work by using sequence methods. _Journal of the Royal Statistical Society: Series A (Statistics in Society)_, 165(2): 317--334.
 
-Müller, N. S., Studer, M., and Ritschard, G. (2007). Classification de parcours de vie à l'aide de l'optimal matching. In _XIVe Rencontre de la Société francophone de classification (SFC 2007), Paris, 5-7 septembre 2007_, pp. 157--160.
+Müller, N. S., Studer, M., and Ritschard, G. (2007). Classification de parcours de vie à l'aide de l'optimal matching. In _XIVe Rencontre de la Société francophone de classification (SFC 2007)_, Paris, 5-7 septembre 2007, pp. 157--160.
 
-Studer, M. (2018). Divisive property-based and fuzzy clustering for sequence analysis. In G. Ritschard and M. Studer (Eds.), _Sequence Analysis and Related Approaches: Innovative Methods and Applications_, pp. 223--239. Cham, Switzerland: Springer International Publishing.
+Studer, M. (2018). Divisive property-based and fuzzy clustering for sequence analysis. In G. Ritschard and M. Studer (Eds.), _Sequence Analysis and Related Approaches: Innovative Methods and Applications_, Volume 10 of _Life Course Research and Social Policies_, pp. 223--239. Cham, Switzerland: Springer.

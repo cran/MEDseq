@@ -1,6 +1,22 @@
 __MEDseq: Mixtures of Exponential-Distance Models with Covariates__   
 ===================================================================
 
+## MEDseq v1.4.1 - (_12<sup>th</sup> release [patch update]: 2023-12-12_)
+### Improvements, Bug Fixes & Miscellaneous Edits
+* Minor fixes to `plot.MEDseq`:
+  * `sortv` options `"from.start"` and `"from.end"` borrowed from `TraMineR` when  
+  `seriated` is `"observations"` or `"both"` for the `"clusters"`, `"i"`, & `"I"` `type` plots.
+  * Seriation is now explicitly prohibited when `type="gating"` when:
+    * models contain no gating covariates: previously an error was returned in such cases.
+    * `x.axis` is supplied via the `...` construct.
+  * Removed spurious warnings in `TraMineR` `type` plots when using extra args. via `...`.
+  * Remedied labelling issues introduced in previous update when `seriated="none"` is supplied.
+* `MoE_entropy` and `MoE_AvePP` both gain the arg. `group` for computing the average entropies  
+and posterior probabilities of each component, respectively: defaults to `FALSE`, i.e. old behaviour.
+* Now following proper convention for reexporting `TraMineR::seqdef`. 
+* Extensive edits to avoid overheads introduced in `matrixStats (>= 1.0.0)` + related minor speed-ups.
+* Now using newer `CITATION` commands & updated `License: GPL (>= 3)`.
+
 ## MEDseq v1.4.0 - (_11<sup>th</sup> release [minor update]: 2022-12-20_)
 ### New Features & Improvements
 * Function `seqdef` added as an exact copy of `TraMineR::seqdef`, to enable experienced  
