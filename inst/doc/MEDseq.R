@@ -9,11 +9,11 @@ if(isTRUE(capabilities("cairo"))) {
 }
 
 ## ----eval=FALSE---------------------------------------------------------------
-#  install.packages('devtools')
-#  devtools::install_github('Keefe-Murphy/MEDseq')
+# install.packages('devtools')
+# devtools::install_github('Keefe-Murphy/MEDseq')
 
 ## ----eval=FALSE---------------------------------------------------------------
-#  install.packages('MEDseq')
+# install.packages('MEDseq')
 
 ## -----------------------------------------------------------------------------
 library(MEDseq)
@@ -34,21 +34,21 @@ mvad.seq      <- seqdef(mvad$sequences[-c(1L, 2L)],
                                    "Joblessness", "School", "Training"))
 
 ## ----eval=FALSE---------------------------------------------------------------
-#  mod1 <- MEDseq_fit(mvad.seq, G=11, modtype="UUN", weights=mvad$weights, gating= ~ gcse5eq,
-#                     covars=mvad.cov, control=MEDseq_control(noise.gate=FALSE))
+# mod1 <- MEDseq_fit(mvad.seq, G=11, modtype="UUN", weights=mvad$weights, gating= ~ gcse5eq,
+#                    covars=mvad.cov, control=MEDseq_control(noise.gate=FALSE))
 
 ## ----eval=FALSE---------------------------------------------------------------
-#  # 10-component CUN model with no covariates.
-#  # CUN models have a precision parameter for each sequence position (i.e. time point),
-#  # though each time point's precision is common across clusters.
-#  
-#  mod2 <- MEDseq_fit(mvad.seq, G=10, modtype="CUN", weights=mvad$weights)
-#  
-#  # 12-component CC model with all covariates.
-#  # CC models have a single precision parameter across all clusters and time points.
-#  
-#  mod3 <- MEDseq_fit(mvad.seq, G=12, modtype="CC", weights=mvad$weights,
-#                     gating= ~ . - Grammar - Location, covars=mvad.cov)
+# # 10-component CUN model with no covariates.
+# # CUN models have a precision parameter for each sequence position (i.e. time point),
+# # though each time point's precision is common across clusters.
+# 
+# mod2 <- MEDseq_fit(mvad.seq, G=10, modtype="CUN", weights=mvad$weights)
+# 
+# # 12-component CC model with all covariates.
+# # CC models have a single precision parameter across all clusters and time points.
+# 
+# mod3 <- MEDseq_fit(mvad.seq, G=12, modtype="CC", weights=mvad$weights,
+#                    gating= ~ . - Grammar - Location, covars=mvad.cov)
 
 ## ----include=FALSE------------------------------------------------------------
 load(file="mvad_mod1.rda")
@@ -59,20 +59,20 @@ load(file="mvad_mod3.rda")
 (comp <- MEDseq_compare(mod1, mod2, mod3, criterion="bic"))
 
 ## -----------------------------------------------------------------------------
-opt   <- comp$optimal
+opt <- comp$optimal
 summary(opt, classification = TRUE, parameters = FALSE, network = FALSE)
 
 ## -----------------------------------------------------------------------------
 print(opt$gating)
 
 ## ----eval=FALSE---------------------------------------------------------------
-#  plot(opt, type="clusters")
+# plot(opt, type="clusters")
 
 ## ----echo=FALSE---------------------------------------------------------------
 knitr::include_graphics("MVAD_Clusters.png")
 
 ## ----eval=FALSE---------------------------------------------------------------
-#  plot(opt, type="central")
+# plot(opt, type="central")
 
 ## ----echo=FALSE---------------------------------------------------------------
 knitr::include_graphics("MVAD_Central.png")
@@ -95,11 +95,11 @@ bio.seq <- seqdef(biofam$sequences,
                              "Left+Marr+Child", "Divorced"))
 
 ## ----eval=FALSE---------------------------------------------------------------
-#  # The UUN model includes a noise component.
-#  # Otherwise, there is a precision parameter for each time point in each cluster.
-#  
-#  bio <- MEDseq_fit(bio.seq, G=10, modtype="UUN", gating= ~ age,
-#                    covars=bio.cov, noise.gate=FALSE)
+# # The UUN model includes a noise component.
+# # Otherwise, there is a precision parameter for each time point in each cluster.
+# 
+# bio <- MEDseq_fit(bio.seq, G=10, modtype="UUN", gating= ~ age,
+#                   covars=bio.cov, noise.gate=FALSE)
 
 ## ----include=FALSE------------------------------------------------------------
 load(file="bio_mod.rda")
@@ -108,7 +108,7 @@ load(file="bio_mod.rda")
 print(bio)
 
 ## ----eval=FALSE---------------------------------------------------------------
-#  plot(bio, type="clusters", seriated="both")
+# plot(bio, type="clusters", seriated="both")
 
 ## ----echo=FALSE---------------------------------------------------------------
 knitr::include_graphics("BIO_Clusters.png")

@@ -5,14 +5,15 @@
 \title{Set control values for use with MEDseq_fit}
 \usage{
 MEDseq_control(algo = c("EM", "CEM", "cemEM"), 
-               init.z = c("kmedoids", "kmodes", "kmodes2", "hc", "random", "list"), 
+               init.z = c("kmedoids", "kmodes", "kmodes2", "hc", 
+                          "random.hard", "soft.random", "list"), 
                z.list = NULL, 
-               dist.mat = NULL, 
                unique = TRUE, 
                criterion = c("bic", "icl", "aic", "dbs", "asw", "cv", "nec"), 
                tau0 = NULL, 
                noise.gate = TRUE, 
                random = TRUE,
+               dist.mat = NULL, 
                do.cv = FALSE, 
                do.nec = FALSE, 
                nfolds = 10L, 
@@ -31,25 +32,23 @@ MEDseq_control(algo = c("EM", "CEM", "cemEM"),
 \arguments{
 \item{algo}{Switch controlling whether models are fit using the \code{"EM"} (the default) or \code{"CEM"} algorithm. The option \code{"cemEM"} allows running the EM algorithm starting from convergence of the CEM algorithm.}
 
-\item{init.z}{The method used to initialise the cluster labels. All options respect the presence of sampling \code{weights}, if any. Defaults to \code{"kmedoids"}. Other options include \code{"kmodes"}, \code{"kmodes2"}, Ward's hierarchical clustering (\code{"hc"}, via \code{\link[stats]{hclust}}), \code{"random"} initialisation, and a user-supplied \code{"list"} (see \code{z.list} below). For weighted sequences, \code{"kmedoids"} is itself initialised using Ward's hierarchical clustering.
+\item{init.z}{The method used to initialise the cluster labels. All options respect the presence of sampling \code{weights}, if any. Defaults to \code{"kmedoids"}. Other options include \code{"kmodes"}, \code{"kmodes2"}, Ward's hierarchical clustering (\code{"hc"}, via \code{\link[stats]{hclust}}), \code{"random.hard"}, or \code{"soft.random"} initialisation (see \code{nstarts} below), and a user-supplied \code{"list"} (see \code{z.list} below). Note that \code{init.z="soft.random"} is only available when \code{algo="CEM"}. For weighted sequences, \code{"kmedoids"} is itself initialised using Ward's hierarchical clustering.
 
 The \code{"kmodes"} and \code{"kmodes2"} options both internally call the function \code{\link{wKModes}}, which \emph{typically} uses random initial modes. Under \code{"kmodes"}, the algorithm is instead initialised via the medoids of the clusters obtained from a call to \code{\link[stats]{hclust}}. The option \code{"kmodes2"} is slightly faster, by virtue of using the \emph{random} initial medoids. However, final results are by default still subject to randomness under both options (unless \code{\link{set.seed}} is invoked), as ties for modes and cluster assignments are \emph{typically} broken at random throughout the algorithm (see the \code{random} argument below, and in \code{\link{wKModes}} itself).}
 
-\item{z.list}{A user supplied list of initial cluster allocation matrices, with number of rows given by the number of observations, and numbers of columns given by the range of component numbers being considered. Only relevant if \code{init.z == "z.list"}. These matrices are allowed correspond to both soft or hard clusterings, and will be internally normalised so that the rows sum to 1.}
-
-\item{dist.mat}{An optional distance matrix to use for initialisation when \code{init.z} is one of \code{"kmedoids"} or \code{"hc"}. Defaults to a Hamming distance matrix. This is an experimental feature and should only be tampered with by expert users.}
+\item{z.list}{A user supplied list of initial cluster allocation matrices, with number of rows given by the number of observations (\emph{including duplicates} if \code{unique=TRUE}), and numbers of columns given by the range of component numbers being considered (where columns corresponding to noise components must be included). Only relevant if \code{init.z == "z.list"}. These matrices are allowed correspond to both soft or hard clusterings, and will be internally normalised so that the rows sum to 1 (or coerced always to a 'hard' matrix if \code{algo != "EM"}).}
 
 \item{unique}{A logical indicating whether the model is fit only to the unique observations (defaults to \code{TRUE}). When there are covariates, this means all unique combinations of covariate and sequence patterns, otherwise only the sequence patterns. 
 
-When \code{weights} \emph{are not} supplied to \code{\link{MEDseq_fit}} and \code{isTRUE(unique)}, weights are given by the occurrence frequency of the corresponding sequences, and the model is then fit to the unique observations only.
+When \code{weights} \emph{are not} supplied to \code{\link{MEDseq_fit}} and \code{unique=TRUE}, weights are given by the occurrence frequency of the corresponding sequences, and the model is then fit to the unique observations only.
 
-When \code{weights} \emph{are} supplied and \code{isTRUE(unique)}, the weights are summed for each set of duplicate observations and assigned to one retained copy of each corresponding unique sequence. Hence, observations with different weights that are otherwise duplicates are treated as duplicates and significant computational gains can be made. 
+When \code{weights} \emph{are} supplied and \code{unique=TRUE}, the weights are summed for each set of duplicate observations and assigned to one retained copy of each corresponding unique sequence. Hence, observations with different weights that are otherwise duplicates are treated as duplicates and significant computational gains can be made. 
 
 In both cases, the results will be unchanged, but setting \code{unique} to \code{TRUE} can often be much faster.}
 
-\item{criterion}{When either \code{G} or \code{modtype} is a vector, \code{criterion} governs how the 'best' model is determined when gathering output. Defaults to \code{"bic"}. Note that all criteria will be returned in any case, if possible.}
+\item{criterion}{When either \code{G} or \code{modtype} is a vector, \code{criterion} governs how the `best' model is determined when gathering output. Defaults to \code{"bic"}. Note that all criteria will be returned in any case, if possible.}
 
-\item{tau0}{Prior mixing proportion for the noise component. If supplied, a noise component will be added to the model in the estimation, with \code{tau0} giving the prior probability of belonging to the noise component for \emph{all} observations. Typically supplied as a scalar in the interval (0, 1), e.g. \code{0.1}. Can be supplied as a vector when gating covariates are present and \code{noise.gate} is \code{TRUE}.}
+\item{tau0}{Prior mixing proportion for the noise component whenever \code{modtype} contains one or more of \code{"CCN"}, \code{"UCN"}, \code{"CUN"}, or \code{"UUN"}. Typically supplied as a scalar in the interval (0, 1), e.g. \code{0.1}, such that the same prior probability of belonging to the noise component applies to \emph{all} observations. If \code{tau0} is not supplied, it will default to the inverse of the number of components (\emph{including} the noise component). However, \code{tau0} can also be supplied as a vector (with length equal to the number of observations, \emph{including duplicates} if \code{unique=TRUE}), which may be particularly useful when gating covariates are present and \code{noise.gate} is \code{TRUE}.}
 
 \item{noise.gate}{A logical indicating whether gating network covariates influence the mixing proportion for the noise component, if any. Defaults to \code{TRUE}, but leads to greater parsimony if \code{FALSE}. Only relevant in the presence of a noise component (i.e. the \code{"CCN"}, \code{"UCN"}, \code{"CUN"}, and \code{"UUN"} models); only affects estimation in the presence of gating covariates.}
 
@@ -57,19 +56,21 @@ In both cases, the results will be unchanged, but setting \code{unique} to \code
 
 Note that this argument is \emph{also} passed to \code{\link{wKModes}} if \code{init.z} is \code{"kmodes"} or \code{"kmodes2"} and that, in certain rare cases when the \code{"CEM"} \code{algo} is invoked when \code{equalPro} is \code{TRUE} and the precision parameter(s) are somehow constrained across clusters, this argument also governs ties for cluster assignments within \code{MEDseq_fit} as well.}
 
+\item{dist.mat}{An optional distance matrix to use - \emph{for initialisation only} - when \code{init.z} is one of \code{"kmedoids"}, \code{"kmodes"}, or \code{"hc"}. Defaults to a Hamming distance matrix. This is an experimental feature and should only be tampered with by expert users.}
+
 \item{do.cv}{A logical indicating whether cross-validated log-likelihood scores should also be computed (see \code{nfolds}). Defaults to \code{FALSE} due to significant computational burden incurred.}
 
 \item{do.nec}{A logical indicating whether the normalised entropy criterion (NEC) should also be computed (for models with more than one component). Defaults to \code{FALSE}. When \code{TRUE}, models with \code{G=1} are fitted always.}
 
-\item{nfolds}{The number of folds to use when \code{isTRUE{do.cv}}.}
+\item{nfolds}{The number of folds to use when \code{do.cv=TRUE}. Defaults to \code{10}.}
 
-\item{nstarts}{The number of random initialisations to use when \code{init.z="random"}. Defaults to \code{1}. Results will be based on the random start yielding the highest estimated log-likelihood.}
+\item{nstarts}{The number of random initialisations to use when \code{init.z="random.hard"} or \code{init.z="soft.random"}. Defaults to \code{1}. Results will be based on the random start yielding the highest estimated log-likelihood.}
 
 \item{stopping}{The criterion used to assess convergence of the EM/CEM algorithm. The default (\code{"aitken"}) uses Aitken's acceleration method, otherwise the \code{"relative"} change in log-likelihood is monitored (which may be less strict).}
 
 \item{equalPro}{Logical variable indicating whether or not the mixing proportions are to be constrained to be equal in the model. Default: \code{equalPro = FALSE}. Only relevant when \code{gating} covariates are \emph{not} supplied within \code{\link{MEDseq_fit}}, otherwise ignored. In the presence of a noise component, only the mixing proportions for the non-noise components are constrained to be equal (by default, see \code{equalNoise}), after accounting for the noise component.}
 
-\item{equalNoise}{Logical which is \strong{only} invoked when \code{isTRUE(equalPro)} and gating covariates are not supplied. Under the default setting (\code{FALSE}), the mixing proportion for the noise component is estimated, and remaining mixing proportions are equal; when \code{TRUE} all components, including the noise component, have equal mixing proportions.}
+\item{equalNoise}{Logical which is \strong{only} invoked when \code{equalPro=TRUE} and gating covariates are not supplied. Under the default setting (\code{FALSE}), the mixing proportion for the noise component is estimated, and remaining mixing proportions are equal; when \code{TRUE} all components, including the noise component, have equal mixing proportions.}
 
 \item{tol}{A vector of length two giving \emph{relative} convergence tolerances for 1) the log-likelihood of the EM/CEM algorithm, and 2) optimisation in the multinomial logistic regression in the gating network, respectively. The default is \code{c(1e-05, 1e-08)}. If only one number is supplied, it is used as the tolerance in both cases.}
 

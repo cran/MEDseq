@@ -124,7 +124,7 @@ load(file="mvad_mod3.rda")
 ```
 
 ```{r}
-opt   <- comp$optimal
+opt <- comp$optimal
 summary(opt, classification = TRUE, parameters = FALSE, network = FALSE)
 ```
 
@@ -160,7 +160,7 @@ Use the following code to see the observation-specific (weighted) density-based 
 plot(opt, type="dbsvals")
 ```
 
-Finally, we can quantify the type of observation characterising each cluster by computing the mean time spent in each state within each cluster. Specifying `MAP=TRUE` computes the mean times based on the hard MAP partition rather than weighted by the soft cluster membership probabilities (albeit still weighted by the sampling weights used during model fitting, by default). Specifying `norm=TRUE` (the default), normalises the mean times to sum to the sequence length within each cluster. The size of each cluster in terms of the number of observations assigned to it is also reported.
+Finally, we can quantify the type of observation characterising each cluster by computing the mean time spent in each state within each cluster. Specifying `MAP=TRUE` computes the mean times based on the hard MAP partition rather than weighted by the soft cluster membership probabilities (albeit still weighted by the sampling weights used during model fitting, by default). Specifying `norm=TRUE` (the default) normalises the mean times to sum to the sequence length within each cluster. The size of each cluster in terms of the number of observations assigned to it is also reported.
 
 ```{r}
 MEDseq_meantime(opt, MAP=TRUE, norm=TRUE)
@@ -236,7 +236,7 @@ Now let's use the plot function from __MEDseq__ to examine the transversal entro
 plot(bio, type="Ht", ylab=NA)
 ```
 
-Other plot types adapted from __TraMineR__ can be produced using `type="d"` (state distribution plots), `type="dH"` (same as `type="Ht"` overlaid on `type="d"`), `type="f"` (state frequency plots), `type="i"` (selected sequence index plots), `type="I"` (whole set index plots), `type="ms"` (modal state plots; an alternative to `type="central"` above), and `type="mt"` (mean times plots). Each of these plots are shown on a per-cluster basis; by default, all account for the sampling weights (if any), via the `weighted` argument, and such plots are typically additionally weighted according to the soft cluster membership probabilities, though it is also possible to use the hard MAP partition instead, via modifying the `soft` argument. All plot types adapted from __TraMineR__ additionally, by default, invoke the `SPS` argument, which causes each constituent panel to be labelled by the central sequence characterising the given cluster, in state-permanence-sequence (SPS) format. Finally, clustering uncertainties, the gating network, the similarity matrix, and model selection criteria can also be visualised.
+Other plot types adapted from __TraMineR__ can be produced using `type="d"` (state distribution plots), `type="dH"` (same as `type="Ht"` overlaid on `type="d"`), `type="f"` (state frequency plots), `type="i"` (selected sequence index plots), `type="I"` (whole set index plots), `type="ms"` (modal state plots; an alternative to `type="central"` above), and `type="mt"` (mean times plots). Each of these plots are shown on a per-cluster basis; by default, all account for the sampling weights (if any), via the `weighted` argument, and such plots are typically additionally weighted according to the soft cluster membership probabilities, though it is also possible to use the hard MAP partition instead, via modifying the `soft` argument. All plot types adapted from __TraMineR__ additionally, by default, invoke the `SPS` argument, which causes each constituent panel (for the non-noise clusters) to be labelled by the central sequence characterising the given cluster, in state-permanence-sequence (SPS) format. Finally, clustering uncertainties, the gating network, the similarity matrix, and model selection criteria can also be visualised.
 
 ---------
 

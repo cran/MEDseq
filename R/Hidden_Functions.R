@@ -19,13 +19,11 @@
                 a  = a, ldiff  = ldiff))
 }
 
-.char_to_num      <- function(x) {
-    utf8ToInt(x)
-}
+.char_to_num      <- function(x) utf8ToInt(x)
 
 #' @importFrom matrixStats "rowMaxs"
-#.choice_crit     <- function(ll, seqs, z, gp, modtype = c("CC", "UC", "CU", "UU", "CCN", "UCN", "CUN", "UUN"), type = c("new", "old"), gamma = 0) {
-.choice_crit      <- function(ll, seqs, z, gp, modtype = c("CC", "UC", "CU", "UU", "CCN", "UCN", "CUN", "UUN"), type = c("new", "old")) {
+#.choice_crit     <- function(ll, seqs, z, gp, modtype = c("CC", "UC", "CU", "UU", "CCN", "UCN", "CUN", "UUN"), type = c("new", "old", "older"), gamma = 0) {
+.choice_crit      <- function(ll, seqs, z, gp, modtype = c("CC", "UC", "CU", "UU", "CCN", "UCN", "CUN", "UUN"), type = c("new", "old", "older")) {
  #if(length(gamma) > 1   ||
  #   !is.numeric(gamma)  ||
  #   (gamma < 0   ||
@@ -36,8 +34,9 @@
   G               <- attr(seqs, ifelse(is.element(modtype, c("CCN", "UCN", "CUN", "UUN")), "G0", "G"))
   P               <- attr(seqs, "T")
   mp              <- switch(EXPR=type, 
-                            new=attr(seqs, "VTS"),
-                            old=P)   * G
+                            new =attr(seqs, "VTS"),
+                            old =(attr(seqs, "V") - 1L)  * P,
+                           older=P)  * G
   kpar            <- switch(EXPR= modtype,
                             CC  = mp + 1L,
                             CCN = mp + (G > 0),
@@ -47,8 +46,9 @@
                             CUN = mp + P,
                             UU  =,
                             UUN = switch(EXPR=type, 
-                                          new=mp + G * P,
-                                          old=mp * 2L)) + gp
+                                         new =,
+                                         old =mp  + G    * P,
+                                        older=mp  * 2L)) + gp
   ll2             <- ll  * 2L
   bic             <- ll2 - kpar * log(attr(seqs, "W"))
  #ebic            <- bic - kpar * 2L * gamma * log(P)
@@ -62,11 +62,6 @@
 
 .crits_names      <- function(x) {
     unlist(lapply(seq_along(x), function(i) stats::setNames(x[[i]], paste0(names(x[i]), "|", names(x[[i]])))))
-}
-
-#' @importFrom stringdist "stringdistmatrix"
-.dbar             <- function(seqs, theta) {
-    mean(.dseq(seqs, theta))
 }
 
 .drop_constants   <- function(dat, formula, sub = NULL) {
@@ -138,17 +133,17 @@
   }
   
   if(G  == 1L)     { 
+    dG  <- if(dG.X)  switch(EXPR=modtype, CC=switch(EXPR=opti, medoid=HAM.mat[,attr(theta, "Ind"), drop=FALSE], .dseq(seqs, theta)), CU=numseq != .char_to_num(theta)) else params$dG
     return(if(ctrl$do.wts)   {
-     dG <- if(dG.X)  switch(EXPR=modtype, CC=switch(EXPR=opti, medoid=HAM.mat[,attr(theta, "Ind"), drop=FALSE], .dseq(seqs, theta)), CU=numseq != .char_to_num(theta)) else params$dG
              switch(EXPR=modtype, 
                     CC  = -ifelse(lambda  == 0, attr(seqs, "W") * lPV, lambda * sum(attr(seqs, "Weights") * dG,  na.rm=TRUE) + attr(seqs, "W")  * P * log1p(V1 * exp(-lambda))),
                     CCN = -attr(seqs, "W") * lPV,
                     CU  = -sum(sweep(dG * drop(lambda), 2L, attr(seqs, "Weights"), FUN="*", check.margin=FALSE), na.rm=TRUE) - attr(seqs, "W")  * sum(log1p(V1 * exp(-lambda))))
            } else  {
              switch(EXPR=modtype,
-                    CC  = -ifelse(0    == lambda, N * lPV, sum(lambda * N * .dbar(seqs, theta), N * P * log1p(V1 * exp(-lambda)), na.rm=TRUE)),
+                    CC  = -ifelse(lambda  == 0, N * lPV, lambda * sum(dG, na.rm=TRUE) + N * P * log1p(V1  * exp(-lambda))),
                     CCN = -N * lPV,
-                    CU  = -sum((numseq != .char_to_num(theta)) * drop(lambda), na.rm=TRUE)    - N * sum(log1p(V1 * exp(-lambda))))
+                    CU  = -sum(dG * drop(lambda), na.rm=TRUE) - N * sum(log1p(V1 * exp(-lambda))))
            })
   } else {
     dG  <- if(dG.X)  switch(EXPR=modtype, 
@@ -173,12 +168,12 @@
       numer       <- switch(EXPR=modtype,
                             CC  = -dG * lambda - P   * log1p(V1 * exp(-lambda)),
                             UC  = -dG * lambda - P   * log1p(V1 * exp(-lambda)),
-                            CU  = -colSums2(simplify2array(dG, higher=FALSE)   * drop(lambda), useNames=FALSE, na.rm=TRUE) - sum(log1p(V1 * exp(-lambda))),
-                            UU  = -vapply(Gseq, function(g) colSums2(dG[[g]]   * lambda[g,],   useNames=FALSE, na.rm=TRUE), numeric(N))   - rowSums2(log1p(V1 * exp(-lambda)), useNamse=FALSE),
+                            CU  = -vapply(dG,   function(x) sum(lambda[x]), numeric(1L)) - sum(log1p(V1 * exp(-lambda))),
+                            UU  = -vapply(Gseq, function(g) sum(lambda[g,dG[[g]]]), numeric(N))   - rowSums2(log1p(V1 * exp(-lambda)), useNamse=FALSE),
                             CCN = c(-dG * lambda[1L] - P * log1p(V1 * exp(-lambda[1L])), - lPV),
                             UCN = c(-dG * lambda[-G] - P * log1p(V1 * exp(-lambda[-G])), - lPV),
-                            CUN = c(-colSums2(simplify2array(dG, higher=FALSE) * lambda[1L,],  useNames=FALSE, na.rm=TRUE) - sum(log1p(V1 * exp(-lambda[1L,]))),    - lPV),
-                            UUN = c(-vapply(Gseq, function(g) colSums2(dG[[g]] * lambda[g,],   useNames=FALSE, na.rm=TRUE), numeric(N))   - rowSums2(log1p(V1 * exp(-lambda[-G,, drop=FALSE])), useNames=FALSE), - lPV))
+                            CUN = c(vapply(dG, function(x) -sum(lambda[1L,x]), numeric(1L)) - sum(log1p(V1 * exp(-lambda[1L,]))), - lPV),
+                            UUN = c(-vapply(Gseq, function(g) sum(lambda[g,dG[[g]]]), numeric(N)) - rowSums2(log1p(V1 * exp(-lambda[-G,, drop=FALSE])), useNames=FALSE), - lPV))
       numer       <- matrix(numer, nrow=1L) + switch(EXPR=modtype, CC=, UC=, CU=, UU=log.tau, c(log.tau, tau0))
     }
     
@@ -209,7 +204,7 @@
             return(list(loglike = loglike, z = exp(numer - denom)))
         }
       }   else     {
-            return(if(ctrl$do.wts) logSumExp(numer * attr(seqs, "Weights")) else logSumExp(numer))
+            return(if(ctrl$do.wts) logSumExp(numer) * attr(seqs, "Weights") else logSumExp(numer))
       }
     },    CEM=     {
       if(N1)       {
@@ -263,7 +258,7 @@
       MLRconverge <- Mstep$MLRconverge
       Estep       <- .E_step(SEQ, modtype=modtype, ctrl=ctrl, numseq=numseq, params=Mstep, HAM.mat=HAM.mat, z.old=z)
       z           <- Estep$z
-      ERR         <- any(is.nan(z))
+      ERR         <- any(is.nan(z) | is.na(z))
       if(isTRUE(ERR))            break
       if(isTRUE(emptywarn) && ctrl$warn         &&
          any(zsum <- (colSums2(z, useNames=FALSE)
@@ -273,11 +268,11 @@
       }
       ll          <- c(ll, Estep$loglike)
       if(isTRUE(st.ait))    {
-        dX        <- .aitken(ll[seq(j  - 2L, j, 1L)])$ldiff
+        dA        <- .aitken(ll[seq(j  - 2L, j, 1L)])$ldiff
       } else       {
-        dX        <- abs(ll[j]  - ll[j - 1L])/(1 + abs(ll[j]))
+        dA        <- abs(ll[j]  - ll[j - 1L])/(1 + abs(ll[j]))
       }
-      runEM       <- dX >= tol && j    < itmax  &&   !ERR
+      runEM       <- dA >= tol && j    < itmax  &&   !ERR
     } # while (j)
   }
     return(list(ERR = ERR, j = j, Mstep = Mstep, ll = ll, z = z, MLRconverge = MLRconverge))
@@ -610,8 +605,8 @@
         theta     <- .weighted_mode(numseq=numseq, 
                                     z=if(G == 1) as.matrix(attr(seqs, "Weights"))   else if(nmeth) z[,Gseq, drop=FALSE] else z)
         if(is.list(theta)   && 
-           (any(ties_t      <- vapply(theta, is.matrix, logical(1L)))) ||
-           (any(t_ties      <- apply(theta, c(1L, 2L), function(x) any(nchar(x) > 1))))) {
+           (any(ties_t      <- vapply(theta, is.matrix, logical(1L))) ||
+           (any(t_ties      <- !apply(theta, c(1L, 2L), grepl, pattern="^[0-9]+$"))))) {
           noties  <- FALSE
           if(any(ties_t))    {
             nonu  <- ties_t
@@ -802,19 +797,39 @@
     if(is.null(levels)) factor(seq) else factor(seq, levels=seq_along(levels) - any(seq == 0), labels=as.character(levels))
 }
 
-.seq_grid         <- function(length, ncat) {
+.seq_grid         <- function(length, ncat, start_zero = FALSE) {
   if(!is.numeric(length) ||
      length(length)      != 1 ||
      length       <= 0)          stop("'length' must a strictly positive scalar", call.=FALSE)
   if(!is.numeric(ncat)   ||
      length(ncat)        != 1 ||
      ncat         <= 0)          stop("'ncat' must a strictly positive scalar",   call.=FALSE)
-    do.call(expand.grid, replicate(length, list(0L:(ncat - 1L))))
+    seqs          <- do.call(expand.grid, replicate(length, list(0L:(ncat - 1L))))
+      if(isTRUE(start_zero)) seqs else seqs + 1L
+}
+
+.soft_to_hard     <- function(z, G) {
+  z[,G]           <- stats::rbinom(nrow(z), size=1L, prob=z[,G])
+  z[,-G]          <- replace(z[,-G], z[,G] == 1, 0L)
+  z[,-G]          <- replace(z[,-G], z[,-G] > 0, 1L)
+    return(z)
 }
 
 .tau_noise        <- function(tau, z0)  {
   t0              <- ifelse(length(z0) == 1, z0, mean(z0))
     cbind(tau * (1 - t0), unname(t0))
+}
+
+.tau0_noise       <- function(z,   t0)  {
+    cbind(z   * (1 - t0), unname(t0))
+}
+
+.theta0           <- function(x, ...)   {
+  if(!inherits(x, "MEDseq"))     stop("'x' must be an object of class 'MEDseq'", call.=FALSE)
+  numseq          <- .fac_to_num(x$data)
+  z               <- x$z[,x$G] * attr(x, "Weights")
+  Vs              <- seq_len(attr(x, "V"))
+    vapply(seq_len(attr(x, "T")), function(p, x=vapply(Vs, function(v) sum(z[numseq[,p] == v]), numeric(1L))) which.max(x), numeric(1L))
 }
 
 #' @importFrom matrixStats "colSums2" "rowSums2"
@@ -898,8 +913,8 @@
   }
   cgroups         <- as.character(groups)
   if(!is.null(noise))  {
-    noiz          <- match(noise, groups, nomatch = 0)
-    if(any(noiz   == 0))         stop("noise incompatible with classification",    call.=FALSE)
+    noize         <- match(noise, groups, nomatch = 0)
+    if(any(noize  == 0))         stop("noise incompatible with classification",    call.=FALSE)
     groups        <- c(groups[groups != noise], groups[groups == noise])
     noise         <- as.numeric(factor(as.character(noise), levels = unique(groups)))
   }
@@ -923,7 +938,7 @@
   diff            <- which(cluster  == num)
   clust           <- data[diff,, drop=FALSE]
   apply(clust, 2L,   function(cat)   {
-    cat           <- if(is.null(weights))    table(cat) else tapply(weights[diff], cat, FUN=sum)
+    cat           <- if(is.null(weights))    table(cat) else vapply(split(weights[diff], cat), sum, numeric(1L))
       return(names(cat)[.rand_MAX(cat, random)])
   })
 }
